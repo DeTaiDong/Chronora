@@ -1,0 +1,378 @@
+"use client";
+
+import { useRouter } from "next/navigation";
+import { FormEvent, useState } from "react";
+
+type LocationResult = {
+  id: string;
+  name: string;
+  latitude: string;
+  longitude: string;
+  country: string;
+  countryCode: string;
+  state: string;
+  city: string;
+  district: string;
+  type: string;
+};
+
+const careerOptions = ["学生", "求职中", "在职", "创业中", "自由职业", "待业"];
+const relationshipOptions = ["单身", "暧昧中", "恋爱中", "已订婚", "已婚", "离异", "分居"];
+const romanceHistoryOptions = ["无正式恋爱经历", "1段", "2-3段", "4段及以上", "不方便透露"];
+const familySupportOptions = ["支持较多", "支持一般", "主要靠自己", "有经济压力", "不方便透露"];
+const lifeEventOptions = [
+  "换专业 / 转行",
+  "长期异地",
+  "出国留学",
+  "创业经历",
+  "重大疾病",
+  "家庭变故",
+  "重要分手",
+  "失业",
+  "重大考试",
+  "大额投资亏损",
+  "无明显重大事件"
+];
+
+const fieldClass =
+  "mt-2 w-full rounded-md border border-ink/15 bg-white px-3 py-3 text-ink shadow-sm outline-none transition placeholder:text-moss/55 focus:border-jade focus:ring-2 focus:ring-jade/15 disabled:bg-ink/5 disabled:text-moss";
+
+function RequiredMark() {
+  return <span className="ml-1 text-ember">*</span>;
+}
+
+function SectionTitle({
+  eyebrow,
+  title,
+  description
+}: {
+  eyebrow: string;
+  title: string;
+  description?: string;
+}) {
+  return (
+    <div className="mb-5">
+      <p className="text-sm font-semibold text-ember">{eyebrow}</p>
+      <h2 className="mt-1 text-2xl font-semibold">{title}</h2>
+      {description ? <p className="mt-2 text-sm leading-6 text-moss">{description}</p> : null}
+    </div>
+  );
+}
+
+export default function BaziIntakeForm() {
+  const router = useRouter();
+  const [birthTimeUnknown, setBirthTimeUnknown] = useState(false);
+  const [locationQuery, setLocationQuery] = useState("");
+  const [locationResults, setLocationResults] = useState<LocationResult[]>([]);
+  const [selectedLocation, setSelectedLocation] = useState<LocationResult | null>(null);
+  const [searching, setSearching] = useState(false);
+  const [locationError, setLocationError] = useState("");
+
+  async function searchLocation() {
+    const query = locationQuery.trim();
+
+    if (query.length < 2) {
+      setLocationError("请输入至少 2 个字再搜索。");
+      return;
+    }
+
+    setSearching(true);
+    setLocationError("");
+
+    try {
+      const response = await fetch(`/api/location/search?q=${encodeURIComponent(query)}`);
+      const data = (await response.json()) as { results?: LocationResult[]; error?: string };
+
+      if (!response.ok || data.error) throw new Error(data.error || "地点搜索失败。");
+
+      setLocationResults(data.results ?? []);
+      if (!data.results?.length) setLocationError("没有找到匹配地点，请尝试输入城市、区县或英文地址。");
+    } catch (error) {
+      setLocationError(error instanceof Error ? error.message : "地点搜索失败。");
+    } finally {
+      setSearching(false);
+    }
+  }
+
+  function onSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    if (!selectedLocation) {
+      setLocationError("请先搜索并选择出生地点。");
+      return;
+    }
+
+    const form = new FormData(event.currentTarget);
+    const payload = {
+      birthDate: String(form.get("birthDate") || ""),
+      birthTime: birthTimeUnknown ? "" : String(form.get("birthTime") || ""),
+      birthTimeUnknown,
+      birthCountryCode: selectedLocation.countryCode,
+      birthCountry: selectedLocation.country,
+      birthState: selectedLocation.state,
+      birthCity: selectedLocation.city || selectedLocation.district || selectedLocation.name,
+      birthLatitude: selectedLocation.latitude,
+      birthLongitude: selectedLocation.longitude,
+      birthPlaceDetail: String(form.get("birthPlaceDetail") || selectedLocation.name),
+      gender: String(form.get("gender") || ""),
+      question: String(form.get("question") || ""),
+      education: String(form.get("education") || ""),
+      careerStatus: String(form.get("careerStatus") || ""),
+      relationshipStatus: String(form.get("relationshipStatus") || ""),
+      romanceHistory: String(form.get("romanceHistory") || ""),
+      familySupport: String(form.get("familySupport") || ""),
+      lifeEvents: form.getAll("lifeEvents").map(String)
+    };
+
+    sessionStorage.setItem("bazi:intake", JSON.stringify(payload));
+    sessionStorage.removeItem("bazi:chart");
+    router.push("/bazi/loading");
+  }
+
+  return (
+    <form
+      onSubmit={onSubmit}
+      className="overflow-hidden rounded-lg border border-white/70 bg-white/82 shadow-[0_18px_60px_rgba(39,54,47,0.14)] backdrop-blur"
+    >
+      <div className="border-b border-ink/10 bg-white/70 px-5 py-4 md:px-7">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-sm font-semibold text-ember">八字命理</p>
+            <h2 className="mt-1 text-2xl font-semibold">填写问诊资料</h2>
+          </div>
+          <p className="rounded border border-ember/20 bg-ember/10 px-3 py-2 text-sm text-ember">
+            <span className="font-semibold">*</span> 必填信息
+          </p>
+        </div>
+      </div>
+
+      <div className="space-y-8 p-5 md:p-7">
+        <section className="rounded-lg border border-ink/10 bg-paper/45 p-4 md:p-5">
+          <SectionTitle
+            eyebrow="必要信息"
+            title="出生资料"
+            description="出生日期、出生地和性别会直接影响排盘结果，请尽量准确填写。"
+          />
+
+          <div className="grid gap-5 md:grid-cols-2">
+            <label className="block text-sm font-medium">
+              具体生日日期
+              <RequiredMark />
+              <input name="birthDate" type="date" required className={fieldClass} />
+            </label>
+
+            <div>
+              <label className="block text-sm font-medium">
+                出生时间
+                {!birthTimeUnknown ? <RequiredMark /> : null}
+                <input
+                  name="birthTime"
+                  type="time"
+                  required={!birthTimeUnknown}
+                  disabled={birthTimeUnknown}
+                  className={fieldClass}
+                />
+              </label>
+              <label className="mt-3 flex min-h-12 items-center gap-3 rounded-md border border-ink/10 bg-white px-3 py-3 text-sm text-moss shadow-sm">
+                <input
+                  name="birthTimeUnknown"
+                  type="checkbox"
+                  checked={birthTimeUnknown}
+                  onChange={(event) => setBirthTimeUnknown(event.target.checked)}
+                  className="h-4 w-4 accent-jade"
+                />
+                不确定具体出生时间
+              </label>
+            </div>
+
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium">
+                出生地点
+                <RequiredMark />
+                <div className="mt-2 flex flex-col gap-3 sm:flex-row">
+                  <input
+                    value={locationQuery}
+                    onChange={(event) => {
+                      setLocationQuery(event.target.value);
+                      setSelectedLocation(null);
+                    }}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter") {
+                        event.preventDefault();
+                        searchLocation();
+                      }
+                    }}
+                    placeholder="搜索出生城市、区县或英文地址"
+                    className="w-full rounded-md border border-ink/15 bg-white px-3 py-3 text-ink shadow-sm outline-none transition placeholder:text-moss/55 focus:border-jade focus:ring-2 focus:ring-jade/15"
+                  />
+                  <button
+                    type="button"
+                    onClick={searchLocation}
+                    disabled={searching}
+                    className="rounded-md bg-ink px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-jade disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {searching ? "搜索中" : "搜索"}
+                  </button>
+                </div>
+              </label>
+
+              {locationError ? (
+                <p className="mt-3 rounded-md border border-ember/20 bg-ember/10 px-3 py-2 text-sm text-ember">
+                  {locationError}
+                </p>
+              ) : null}
+
+              {locationResults.length > 0 ? (
+                <div className="mt-3 grid gap-2">
+                  {locationResults.map((result) => {
+                    const selected = selectedLocation?.id === result.id;
+
+                    return (
+                      <button
+                        key={result.id}
+                        type="button"
+                        onClick={() => {
+                          setSelectedLocation(result);
+                          setLocationQuery(result.name);
+                          setLocationError("");
+                        }}
+                        className={`rounded-md border px-3 py-3 text-left text-sm transition ${
+                          selected
+                            ? "border-jade bg-jade/10 text-ink"
+                            : "border-ink/10 bg-white text-moss hover:border-jade/40"
+                        }`}
+                      >
+                        <span className="block font-medium text-ink">{result.name}</span>
+                        <span className="mt-1 block text-xs">
+                          经度 {Number(result.longitude).toFixed(4)} · 纬度 {Number(result.latitude).toFixed(4)}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : null}
+            </div>
+
+            <label className="block text-sm font-medium md:col-span-2">
+              具体区县 / 出生地补充
+              <input name="birthPlaceDetail" placeholder="可补充医院、区县、街区；不填则使用搜索结果" className={fieldClass} />
+            </label>
+
+            <label className="block text-sm font-medium md:col-span-2">
+              性别
+              <RequiredMark />
+              <select name="gender" required defaultValue="" className={fieldClass}>
+                <option value="" disabled>
+                  请选择性别
+                </option>
+                <option value="female">女</option>
+                <option value="male">男</option>
+                <option value="other">其他 / 不便分类</option>
+              </select>
+            </label>
+          </div>
+        </section>
+
+        <section className="rounded-lg border border-ink/10 bg-white/65 p-4 md:p-5">
+          <SectionTitle
+            eyebrow="辅助信息"
+            title="你想预测的问题"
+            description="这项不强制，但会显著影响后续解读方向。可以写具体问题，也可以写当前最困扰你的主题。"
+          />
+          <textarea
+            name="question"
+            rows={5}
+            placeholder="例：我想看未来一年事业是否适合转行；或者我想了解感情关系的发展。"
+            className={`${fieldClass} resize-y`}
+          />
+        </section>
+
+        <details className="rounded-lg border border-ink/10 bg-paper/55 p-4 transition open:bg-white/65 md:p-5">
+          <summary className="cursor-pointer text-base font-semibold text-ink">
+            展开填写更多辅助信息
+          </summary>
+
+          <div className="mt-5 grid gap-5 md:grid-cols-2">
+            <label className="block text-sm font-medium">
+              学历信息
+              <input name="education" placeholder="例：本科 / 硕士 / 高中 / 其他" className={fieldClass} />
+            </label>
+
+            <label className="block text-sm font-medium">
+              职业状态
+              <select name="careerStatus" defaultValue="" className={fieldClass}>
+                <option value="">不填写</option>
+                {careerOptions.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="block text-sm font-medium">
+              感情状态
+              <select name="relationshipStatus" defaultValue="" className={fieldClass}>
+                <option value="">不填写</option>
+                {relationshipOptions.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="block text-sm font-medium">
+              感情经历
+              <select name="romanceHistory" defaultValue="" className={fieldClass}>
+                <option value="">不填写</option>
+                {romanceHistoryOptions.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="block text-sm font-medium md:col-span-2">
+              家庭支持程度
+              <select name="familySupport" defaultValue="" className={fieldClass}>
+                <option value="">不填写</option>
+                {familySupportOptions.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <fieldset className="md:col-span-2">
+              <legend className="text-sm font-medium">重大人生经历</legend>
+              <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {lifeEventOptions.map((option) => (
+                  <label
+                    key={option}
+                    className="flex min-h-12 items-center gap-3 rounded-md border border-ink/10 bg-white px-3 py-2 text-sm text-moss shadow-sm"
+                  >
+                    <input name="lifeEvents" type="checkbox" value={option} className="h-4 w-4 accent-jade" />
+                    {option}
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+          </div>
+        </details>
+      </div>
+
+      <div className="flex flex-col gap-3 border-t border-ink/10 bg-white/76 px-5 py-4 md:flex-row md:items-center md:justify-between md:px-7">
+        <p className="text-sm leading-6 text-moss">点击下一步后，将进入八字排盘加载页。</p>
+        <button
+          type="submit"
+          className="rounded-md bg-ink px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-jade focus:outline-none focus:ring-2 focus:ring-jade/40"
+        >
+          下一步
+        </button>
+      </div>
+    </form>
+  );
+}
