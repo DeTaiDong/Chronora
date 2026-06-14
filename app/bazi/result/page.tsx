@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import type { BaziChart, ChartColumn } from "@/app/bazi/chartEngine";
+import { hasSecondaryInfo } from "@/lib/fortune-master";
 
 // ---- 五行颜色 ----
 const elementColors: Record<string, string> = {
@@ -328,6 +329,7 @@ export default function BaziResultPage() {
     .filter(Boolean)
     .join(" · ");
   const maxElement = Math.max(...Object.values(chart.fiveElements), 1);
+  const canAskMaster = hasSecondaryInfo(chart.input);
 
   return (
     <main className="min-h-screen bg-paper px-4 py-5 text-ink sm:px-6 lg:px-8">
@@ -466,6 +468,28 @@ export default function BaziResultPage() {
             </div>
           </div>
         </div>
+
+        {canAskMaster ? (
+          <section className="mt-5 rounded-xl border border-ink/10 bg-white/80 p-5 shadow-sm sm:p-6">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-widest text-ember">
+                  观命先生
+                </p>
+                <h2 className="mt-1 text-xl font-semibold text-ink">请先生据盘细看</h2>
+                <p className="mt-2 text-sm leading-6 text-moss">
+                  已检测到问诊主题或辅助信息，可进入一次性解读页面。
+                </p>
+              </div>
+              <Link
+                href="/bazi/master"
+                className="inline-flex items-center justify-center rounded-lg bg-ink px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-jade focus:outline-none focus:ring-2 focus:ring-jade/40"
+              >
+                请先生解盘
+              </Link>
+            </div>
+          </section>
+        ) : null}
       </div>
     </main>
   );
