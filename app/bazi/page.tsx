@@ -36,20 +36,6 @@ export default function BaziPage() {
               必要信息用于排盘，辅助信息用于让后续解释更贴近真实处境。当前会先生成结构化命盘结果页，之后再接入更完整的解读与问诊流程。
             </p>
 
-            <div className="mt-7 grid gap-3 text-sm text-moss">
-              <div className="border-l-2 border-jade bg-white/62 px-4 py-3">
-                <b className="mb-1 block text-ink">出生地点换算</b>
-                系统会记录国家、地区、城市和经纬度，并用于真太阳时校正。
-              </div>
-              <div className="border-l-2 border-ember bg-white/62 px-4 py-3">
-                <b className="mb-1 block text-ink">时辰不确定</b>
-                可勾选“不确定具体出生时间”，结果页会提示降低时柱判断权重。
-              </div>
-              <div className="border-l-2 border-ink bg-white/62 px-4 py-3">
-                <b className="mb-1 block text-ink">Chronora</b>
-                观石会先把排盘流程做稳定，再逐步扩展问诊、解释与多术数入口。
-              </div>
-            </div>
           </aside>
 
           <BaziIntakeForm />

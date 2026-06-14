@@ -270,7 +270,24 @@ function symbolicStars(context: {
   const { dayStem, dayBranch, yearBranch, monthBranch, branch, pillar, pillarIndex } = context;
   const stars: string[] = [];
   const yearGroup = branchGroup(yearBranch);
-  const dayGroup = branchGroup(dayBranch);
+
+  // 血刃：按日干查对应地支
+  const xueRenBranch: Record<string, string> = {
+    甲: "丑", 己: "丑",
+    乙: "子", 庚: "子",
+    丙: "亥", 辛: "亥",
+    丁: "戌", 壬: "戌",
+    戊: "酉", 癸: "酉"
+  };
+
+  // 月德：按月支三合组查对应天干，与当前柱天干比较
+  const yueDeStemByGroup: Record<string, string> = {
+    申子辰: "壬",
+    寅午戌: "丙",
+    巳酉丑: "庚",
+    亥卯未: "甲"
+  };
+  const currentStem = pillar.slice(0, 1);
 
   if (noblemanByDayStem[dayStem]?.includes(branch)) stars.push("天乙贵人");
   if (taiJiBranchesByDayStem[dayStem]?.includes(branch)) stars.push("太极贵人");
@@ -278,17 +295,17 @@ function symbolicStars(context: {
   if (guoYinByDayStem[dayStem] === branch) stars.push("国印贵人");
   if (hongluanByYearBranch[yearBranch] === branch) stars.push("红鸾");
   if (tianxiByYearBranch[yearBranch] === branch) stars.push("天喜");
-  if (groupStar(yearGroup, "桃花") === branch || groupStar(dayGroup, "桃花") === branch) stars.push("咸池");
-  if (groupStar(yearGroup, "驿马") === branch || groupStar(dayGroup, "驿马") === branch) stars.push("驿马");
-  if (groupStar(yearGroup, "华盖") === branch || groupStar(dayGroup, "华盖") === branch) stars.push("华盖");
-  if (groupStar(yearGroup, "将星") === branch || groupStar(dayGroup, "将星") === branch) stars.push("将星");
-  if (groupStar(yearGroup, "亡神") === branch || groupStar(dayGroup, "亡神") === branch) stars.push("亡神");
-  if (groupStar(yearGroup, "劫煞") === branch || groupStar(dayGroup, "劫煞") === branch) stars.push("劫煞");
-  if (groupStar(yearGroup, "灾煞") === branch || groupStar(dayGroup, "灾煞") === branch) stars.push("灾煞");
-  if (branch === "午" || branch === "未") stars.push("血刃");
+  if (groupStar(yearGroup, "桃花") === branch) stars.push("咸池");
+  if (groupStar(yearGroup, "驿马") === branch) stars.push("驿马");
+  if (groupStar(yearGroup, "华盖") === branch) stars.push("华盖");
+  if (groupStar(yearGroup, "将星") === branch) stars.push("将星");
+  if (groupStar(yearGroup, "亡神") === branch) stars.push("亡神");
+  if (groupStar(yearGroup, "劫煞") === branch) stars.push("劫煞");
+  if (groupStar(yearGroup, "灾煞") === branch) stars.push("灾煞");
+  if (xueRenBranch[dayStem] === branch) stars.push("血刃");
   if (branch === "寅" || branch === "申") stars.push("词馆");
   if (branch === "巳" || branch === "酉") stars.push("德秀贵人");
-  if (monthBranch === branch) stars.push("月德");
+  if (yueDeStemByGroup[branchGroup(monthBranch)] === currentStem) stars.push("月德");
   if (
     pillarIndex === 2 &&
     ["丙子", "丁丑", "戊寅", "辛卯", "壬辰", "癸巳", "丙午", "丁未", "戊申", "辛酉", "壬戌", "癸亥"].includes(pillar)

@@ -223,7 +223,7 @@ export default function BaziIntakeForm() {
               ) : null}
 
               {locationResults.length > 0 ? (
-                <div className="mt-3 grid gap-2">
+                <div className="mt-3 grid gap-2 rounded-md border border-ink/10 bg-paper/70 p-2">
                   {locationResults.map((result) => {
                     const selected = selectedLocation?.id === result.id;
 
@@ -239,7 +239,7 @@ export default function BaziIntakeForm() {
                         className={`rounded-md border px-3 py-3 text-left text-sm transition ${
                           selected
                             ? "border-jade bg-jade/10 text-ink"
-                            : "border-ink/10 bg-white text-moss hover:border-jade/40"
+                            : "border-ink/10 bg-white/60 text-moss hover:border-jade/40 hover:bg-white/90"
                         }`}
                       >
                         <span className="block font-medium text-ink">{result.name}</span>
