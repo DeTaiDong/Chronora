@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import type { BaziChart, ChartColumn } from "@/app/bazi/chartEngine";
 import { hasSecondaryInfo } from "@/lib/fortune-master";
+import SiteNav from "@/components/SiteNav";
 
 // ---- 五行颜色 ----
 const elementColors: Record<string, string> = {
@@ -334,9 +335,10 @@ export default function BaziResultPage() {
   return (
     <main className="min-h-screen bg-paper px-4 py-5 text-ink sm:px-6 lg:px-8">
       <div className="mx-auto max-w-[1400px]">
+        <SiteNav />
 
         {/* 导航 */}
-        <nav className="flex items-center justify-between py-2">
+        <nav className="hidden items-center justify-between py-2">
           <Link
             href="/"
             className="flex items-center gap-2.5 rounded-md focus:outline-none focus:ring-2 focus:ring-jade/40"

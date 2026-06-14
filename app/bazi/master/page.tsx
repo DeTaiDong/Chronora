@@ -6,6 +6,7 @@ import type { BaziChart, BaziInput } from "@/app/bazi/chartEngine";
 import { generatePreviewFortuneReading } from "@/lib/fortune-master/preview";
 import type { FortuneMasterResponse } from "@/lib/fortune-master";
 import { hasSecondaryInfo } from "@/lib/fortune-master";
+import SiteNav from "@/components/SiteNav";
 
 type InfoItem = {
   label: string;
@@ -135,20 +136,7 @@ export default function BaziMasterPage() {
   return (
     <main className="min-h-screen bg-paper px-4 py-5 text-ink sm:px-6 lg:px-8">
       <div className="mx-auto max-w-6xl">
-        <nav className="flex items-center justify-between py-2">
-          <Link
-            href="/bazi/result"
-            className="rounded-md border border-ink/15 bg-white/70 px-3 py-2 text-sm font-medium text-ink transition hover:border-jade hover:text-jade"
-          >
-            返回命盘
-          </Link>
-          <Link
-            href="/bazi"
-            className="rounded-md border border-ink/15 bg-white/70 px-3 py-2 text-sm font-medium text-ink transition hover:border-jade hover:text-jade"
-          >
-            重新填写
-          </Link>
-        </nav>
+        <SiteNav />
 
         <header className="mt-5 overflow-hidden rounded-lg bg-[linear-gradient(150deg,#1a1611,#2d261b)] px-5 py-7 shadow-[0_18px_52px_rgba(21,19,15,0.2)] sm:px-7">
           <p className="text-xs font-semibold uppercase tracking-widest text-[#c9a85d]">观命先生</p>
