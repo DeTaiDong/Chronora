@@ -310,7 +310,8 @@ function symbolicStars(context: {
   // 天医: 月支前一位
   const tianYiBranch = branches[(branches.indexOf(monthBranch as Branch) + 11) % 12];
   // 月德: 月支三合组 → 对应天干
-  const yueDeStem: Record<string, string> = { 申子辰: "壬", 寅午戌: "丙", 巳酉丑: "庚", 亥卯未: "甲" }[monthGroup];
+  const yueDeStemMap: Record<string, string> = { 申子辰: "壬", 寅午戌: "丙", 巳酉丑: "庚", 亥卯未: "甲" };
+  const yueDeStem = yueDeStemMap[monthGroup];
 
   if (noblemanByDayStem[dayStem]?.includes(branch)) stars.push("天乙贵人");
   if (taiJiBranchesByDayStem[dayStem]?.includes(branch)) stars.push("太极贵人");
