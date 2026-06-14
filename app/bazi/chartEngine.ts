@@ -181,8 +181,38 @@ function groupStar(group: string, star: "桃花" | "驿马" | "华盖" | "将星
   return maps[star][group as keyof (typeof maps)[typeof star]];
 }
 
+/*
+ * 神煞算法参考文献
+ *
+ * 古籍：
+ *   - 《三命通会》（万民英，明）— 血刃单干查法、九丑日列表
+ *   - 《渊海子平》（徐大升，宋）— 天乙贵人、将星、驿马等基础神煞
+ *   - 《神峰通考》（张楠，明）  — 桃花/咸池以日支三合组起算
+ *
+ * 网络参考：
+ *   - 八字神煞速查及详解: https://blog.csdn.net/snans/article/details/125460519
+ *   - 八字知识之神煞大全解析: https://ly.yishihui.net/bazi/250.htm
+ *   - 神煞论命（金舆、天医）: https://www.sf280.com/bazililun/shenshalunming/
+ *   - 八字神煞大全: https://zhuanlan.zhihu.com/p/706196420
+ *   - Java 实现八字神煞: https://blog.csdn.net/luozhuang/article/details/8678380
+ *
+ * 各星取法说明：
+ *   天乙/太极/文昌/天厨/国印 — 日干起，文昌/天厨兼查年干
+ *   金舆                     — 年干起（甲辰乙巳丙戊未丁己申庚戌辛亥壬丑癸寅）
+ *   红鸾/天喜                — 年支起
+ *   将星/驿马/亡神/劫煞/灾煞 — 年支三合组
+ *   咸池(桃花)/华盖          — 日支三合组（《神峰通考》）
+ *   飞刃                     — 羊刃对冲支，日干起
+ *   血刃                     — 《三命通会》单干表（壬→未，非配对法）
+ *   德秀贵人                 — 月支三合组决定德/秀天干，对当前柱天干判断
+ *   天医                     — 月支前一位
+ *   童子煞                   — 年支三合组（各家分歧较大，仍有偏差）
+ *   月德                     — 月支三合组对应天干，与当前柱天干比较
+ *   九丑日                   — 固定日柱列表（壬子壬午癸丑癸未庚辰庚戌辛巳辛亥）
+ */
 function symbolicStars(context: {
   dayStem: string;
+  yearStem: string;
   dayBranch: string;
   yearBranch: string;
   monthBranch: string;
@@ -190,122 +220,126 @@ function symbolicStars(context: {
   pillar: string;
   pillarIndex: number;
 }) {
+  // 天乙贵人 by day stem
   const noblemanByDayStem: Record<string, string[]> = {
-    甲: ["丑", "未"],
-    戊: ["丑", "未"],
-    庚: ["丑", "未"],
-    乙: ["子", "申"],
-    己: ["子", "申"],
-    丙: ["亥", "酉"],
-    丁: ["亥", "酉"],
-    壬: ["卯", "巳"],
-    癸: ["卯", "巳"],
+    甲: ["丑", "未"], 戊: ["丑", "未"], 庚: ["丑", "未"],
+    乙: ["子", "申"], 己: ["子", "申"],
+    丙: ["亥", "酉"], 丁: ["亥", "酉"],
+    壬: ["卯", "巳"], 癸: ["卯", "巳"],
     辛: ["寅", "午"]
   };
-  const wenchangByDayStem: Record<string, string> = {
-    甲: "巳",
-    乙: "午",
-    丙: "申",
-    丁: "酉",
-    戊: "申",
-    己: "酉",
-    庚: "亥",
-    辛: "子",
-    壬: "寅",
-    癸: "卯"
+  // 文昌贵人 by stem (同时查年干和日干)
+  const wenchangByStem: Record<string, string> = {
+    甲: "巳", 乙: "午", 丙: "申", 丁: "酉",
+    戊: "申", 己: "酉", 庚: "亥", 辛: "子",
+    壬: "寅", 癸: "卯"
   };
+  // 天厨贵人: 食神临官之支 (by stem, 同时查年干和日干)
+  const tianChuByStem: Record<string, string> = {
+    甲: "巳", 乙: "午", 丙: "巳", 丁: "午",
+    戊: "申", 己: "酉", 庚: "亥", 辛: "子",
+    壬: "寅", 癸: "卯"
+  };
+  // 国印贵人 by day stem
   const guoYinByDayStem: Record<string, string> = {
-    甲: "戌",
-    乙: "亥",
-    丙: "丑",
-    丁: "寅",
-    戊: "丑",
-    己: "寅",
-    庚: "辰",
-    辛: "巳",
-    壬: "未",
-    癸: "申"
+    甲: "戌", 乙: "亥", 丙: "丑", 丁: "寅",
+    戊: "丑", 己: "寅", 庚: "辰", 辛: "巳",
+    壬: "未", 癸: "申"
   };
+  // 金舆 by year stem: 甲龙乙蛇丙戊羊丁己猴庚犬辛猪壬牛癸虎
+  const jinYuByYearStem: Record<string, string> = {
+    甲: "辰", 乙: "巳", 丙: "未", 戊: "未",
+    丁: "申", 己: "申", 庚: "戌", 辛: "亥",
+    壬: "丑", 癸: "寅"
+  };
+  // 红鸾 / 天喜 by year branch
   const hongluanByYearBranch: Record<string, string> = {
-    子: "卯",
-    丑: "寅",
-    寅: "丑",
-    卯: "子",
-    辰: "亥",
-    巳: "戌",
-    午: "酉",
-    未: "申",
-    申: "未",
-    酉: "午",
-    戌: "巳",
-    亥: "辰"
+    子: "卯", 丑: "寅", 寅: "丑", 卯: "子",
+    辰: "亥", 巳: "戌", 午: "酉", 未: "申",
+    申: "未", 酉: "午", 戌: "巳", 亥: "辰"
   };
   const tianxiByYearBranch: Record<string, string> = {
-    子: "酉",
-    丑: "申",
-    寅: "未",
-    卯: "午",
-    辰: "巳",
-    巳: "辰",
-    午: "卯",
-    未: "寅",
-    申: "丑",
-    酉: "子",
-    戌: "亥",
-    亥: "戌"
+    子: "酉", 丑: "申", 寅: "未", 卯: "午",
+    辰: "巳", 巳: "辰", 午: "卯", 未: "寅",
+    申: "丑", 酉: "子", 戌: "亥", 亥: "戌"
   };
+  // 太极贵人 by day stem
   const taiJiBranchesByDayStem: Record<string, string[]> = {
-    甲: ["子", "午"],
-    乙: ["子", "午"],
-    丙: ["卯", "酉"],
-    丁: ["卯", "酉"],
-    戊: ["辰", "戌", "丑", "未"],
-    己: ["辰", "戌", "丑", "未"],
-    庚: ["寅", "亥"],
-    辛: ["寅", "亥"],
-    壬: ["巳", "申"],
-    癸: ["巳", "申"]
+    甲: ["子", "午"], 乙: ["子", "午"],
+    丙: ["卯", "酉"], 丁: ["卯", "酉"],
+    戊: ["辰", "戌", "丑", "未"], 己: ["辰", "戌", "丑", "未"],
+    庚: ["寅", "亥"], 辛: ["寅", "亥"],
+    壬: ["巳", "申"], 癸: ["巳", "申"]
   };
+  // 血刃: 三命通会 单干查法
+  const xueRenByDayStem: Record<string, string> = {
+    甲: "丑", 乙: "子", 丙: "亥", 丁: "酉",
+    戊: "午", 己: "卯", 庚: "寅", 辛: "午",
+    壬: "未", 癸: "亥"
+  };
+  // 飞刃: 羊刃的对冲支 by day stem
+  const feiRenByDayStem: Record<string, string> = {
+    甲: "酉", 乙: "戌", 丙: "子", 丁: "丑",
+    戊: "子", 己: "丑", 庚: "卯", 辛: "辰",
+    壬: "午", 癸: "未"
+  };
+  // 德秀贵人: 月支三合组决定哪些天干为德/秀，对当前柱天干判断
+  const dexiuStemsByMonthGroup: Record<string, string[]> = {
+    亥卯未: ["甲", "乙", "丁", "壬"],
+    寅午戌: ["丙", "丁", "戊", "癸"],
+    申子辰: ["壬", "癸", "戊", "己"],
+    巳酉丑: ["庚", "辛", "乙"]
+  };
+  // 童子煞: 年支三合组决定哪些地支为童子
+  const tongZiBranchesByYearGroup: Record<string, string[]> = {
+    申子辰: ["亥", "子"],
+    巳酉丑: ["申", "酉"],
+    寅午戌: ["巳", "午"],
+    亥卯未: ["寅", "卯"]
+  };
+  // 九丑日: 特定日柱
+  const jiuChouDays = new Set(["壬子", "壬午", "癸丑", "癸未", "庚辰", "庚戌", "辛巳", "辛亥"]);
 
-  const { dayStem, dayBranch, yearBranch, monthBranch, branch, pillar, pillarIndex } = context;
+  const { dayStem, yearStem, dayBranch, yearBranch, monthBranch, branch, pillar, pillarIndex } = context;
   const stars: string[] = [];
   const yearGroup = branchGroup(yearBranch);
-
-  // 血刃：按日干查对应地支
-  const xueRenBranch: Record<string, string> = {
-    甲: "丑", 己: "丑",
-    乙: "子", 庚: "子",
-    丙: "亥", 辛: "亥",
-    丁: "戌", 壬: "戌",
-    戊: "酉", 癸: "酉"
-  };
-
-  // 月德：按月支三合组查对应天干，与当前柱天干比较
-  const yueDeStemByGroup: Record<string, string> = {
-    申子辰: "壬",
-    寅午戌: "丙",
-    巳酉丑: "庚",
-    亥卯未: "甲"
-  };
+  const dayGroup = branchGroup(dayBranch);
+  const monthGroup = branchGroup(monthBranch);
   const currentStem = pillar.slice(0, 1);
+
+  // 天医: 月支前一位
+  const tianYiBranch = branches[(branches.indexOf(monthBranch as Branch) + 11) % 12];
+  // 月德: 月支三合组 → 对应天干
+  const yueDeStem: Record<string, string> = { 申子辰: "壬", 寅午戌: "丙", 巳酉丑: "庚", 亥卯未: "甲" }[monthGroup];
 
   if (noblemanByDayStem[dayStem]?.includes(branch)) stars.push("天乙贵人");
   if (taiJiBranchesByDayStem[dayStem]?.includes(branch)) stars.push("太极贵人");
-  if (wenchangByDayStem[dayStem] === branch) stars.push("文昌贵人");
+  // 文昌/天厨: 年干和日干都查
+  if (wenchangByStem[dayStem] === branch || wenchangByStem[yearStem] === branch) stars.push("文昌贵人");
+  if (tianChuByStem[dayStem] === branch || tianChuByStem[yearStem] === branch) stars.push("天厨贵人");
   if (guoYinByDayStem[dayStem] === branch) stars.push("国印贵人");
+  // 金舆: 年干查
+  if (jinYuByYearStem[yearStem] === branch) stars.push("金舆");
   if (hongluanByYearBranch[yearBranch] === branch) stars.push("红鸾");
   if (tianxiByYearBranch[yearBranch] === branch) stars.push("天喜");
-  if (groupStar(yearGroup, "桃花") === branch) stars.push("咸池");
-  if (groupStar(yearGroup, "驿马") === branch) stars.push("驿马");
-  if (groupStar(yearGroup, "华盖") === branch) stars.push("华盖");
+  // 将星/驿马/亡神/劫煞/灾煞: 年支三合组
   if (groupStar(yearGroup, "将星") === branch) stars.push("将星");
+  if (groupStar(yearGroup, "驿马") === branch) stars.push("驿马");
   if (groupStar(yearGroup, "亡神") === branch) stars.push("亡神");
   if (groupStar(yearGroup, "劫煞") === branch) stars.push("劫煞");
   if (groupStar(yearGroup, "灾煞") === branch) stars.push("灾煞");
-  if (xueRenBranch[dayStem] === branch) stars.push("血刃");
+  // 咸池/华盖: 日支三合组
+  if (groupStar(dayGroup, "桃花") === branch) stars.push("咸池");
+  if (groupStar(dayGroup, "华盖") === branch) stars.push("华盖");
+  if (feiRenByDayStem[dayStem] === branch) stars.push("飞刃");
+  if (xueRenByDayStem[dayStem] === branch) stars.push("血刃");
+  // 德秀: 月支组 → 当前柱天干
+  if ((dexiuStemsByMonthGroup[monthGroup] ?? []).includes(currentStem)) stars.push("德秀贵人");
+  if (tianYiBranch === branch) stars.push("天医");
+  if ((tongZiBranchesByYearGroup[yearGroup] ?? []).includes(branch)) stars.push("童子煞");
+  if (yueDeStem === currentStem) stars.push("月德");
   if (branch === "寅" || branch === "申") stars.push("词馆");
-  if (branch === "巳" || branch === "酉") stars.push("德秀贵人");
-  if (yueDeStemByGroup[branchGroup(monthBranch)] === currentStem) stars.push("月德");
+  if (pillarIndex === 2 && jiuChouDays.has(pillar)) stars.push("九丑日");
   if (
     pillarIndex === 2 &&
     ["丙子", "丁丑", "戊寅", "辛卯", "壬辰", "癸巳", "丙午", "丁未", "戊申", "辛酉", "壬戌", "癸亥"].includes(pillar)
@@ -426,6 +460,7 @@ export function createBaziChart(input: BaziInput): BaziChart {
       nayin: pillar.nayin,
       symbolicStars: symbolicStars({
         dayStem: day.stem,
+        yearStem: year.stem,
         dayBranch: day.branch,
         yearBranch: year.branch,
         monthBranch: month.branch,
