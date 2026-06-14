@@ -161,6 +161,12 @@ function splitPillar(pillar: string) {
   };
 }
 
+function dayMasterLabel(gender?: string) {
+  if (gender === "female") return "元女";
+  if (gender === "male") return "元男";
+  return "日元";
+}
+
 function branchGroup(branch: string) {
   if (["申", "子", "辰"].includes(branch)) return "申子辰";
   if (["寅", "午", "戌"].includes(branch)) return "寅午戌";
@@ -409,7 +415,7 @@ export function createBaziChart(input: BaziInput): BaziChart {
     {
       label: "日柱",
       value: eightChar.getDay(),
-      mainStar: "元男",
+      mainStar: dayMasterLabel(input.gender),
       hiddenGan: eightChar.getDayHideGan(),
       hiddenGods: eightChar.getDayShiShenZhi(),
       lifeStage: eightChar.getDayDiShi(),
