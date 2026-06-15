@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import type { BaziChart, BaziInput } from "@/app/bazi/chartEngine";
-import { generatePreviewFortuneReading } from "@/lib/fortune-master/preview";
 import type { FortuneMasterResponse } from "@/lib/fortune-master";
 import { hasSecondaryInfo } from "@/lib/fortune-master";
 import SiteNav from "@/components/SiteNav";
@@ -88,6 +87,9 @@ function ReadingBox({ reading }: { reading: FortuneMasterResponse | null }) {
 export default function BaziMasterPage() {
   const [chart, setChart] = useState<BaziChart | null>(null);
   const [missing, setMissing] = useState(false);
+  const [reading, setReading] = useState<FortuneMasterResponse | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [apiError, setApiError] = useState<string | null>(null);
 
   useEffect(() => {
     const raw = sessionStorage.getItem("bazi:chart");
@@ -102,7 +104,26 @@ export default function BaziMasterPage() {
     setMissing(!hasSecondaryInfo(parsed.input));
   }, []);
 
-  const reading = useMemo(() => (chart ? generatePreviewFortuneReading(chart) : null), [chart]);
+  useEffect(() => {
+    if (!chart) return;
+
+    setLoading(true);
+    setApiError(null);
+
+    fetch("/api/fortune-master/generate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(chart)
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      })
+      .then((data) => setReading(data))
+      .catch(() => setApiError("解读暂时不可用，请稍后再试"))
+      .finally(() => setLoading(false));
+  }, [chart]);
+
   const secondaryInfo = useMemo(() => (chart ? infoItems(chart.input) : []), [chart]);
 
   if (!chart || missing) {
@@ -174,7 +195,17 @@ export default function BaziMasterPage() {
         </section>
 
         <div className="mt-5">
-          <ReadingBox reading={reading} />
+          {loading ? (
+            <section className="rounded-lg border border-ink/10 bg-white/80 p-8 shadow-sm text-center">
+              <p className="text-sm text-moss animate-pulse">先生正在推演，稍候片刻……</p>
+            </section>
+          ) : apiError ? (
+            <section className="rounded-lg border border-ink/10 bg-white/80 p-8 shadow-sm text-center">
+              <p className="text-sm text-ember">{apiError}</p>
+            </section>
+          ) : (
+            <ReadingBox reading={reading} />
+          )}
         </div>
       </div>
     </main>

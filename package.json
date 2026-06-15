@@ -10,8 +10,10 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
     "lunar-typescript": "^1.8.6",
     "next": "^15.0.3",
+    "openai": "^6.42.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "temporal-polyfill": "^0.3.2"
