@@ -1,7 +1,8 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { FormEvent, useState } from "react";
+import type { FormEvent } from "react";
 
 type LocationResult = {
   id: string;
@@ -15,6 +16,49 @@ type LocationResult = {
   district: string;
   type: string;
 };
+
+type SavedPerson = {
+  id: string;
+  birthDate: string;
+  birthTime: string;
+  birthTimeUnknown: boolean;
+  location: LocationResult;
+  locationQuery: string;
+  birthPlaceDetail: string;
+  gender: string;
+  education: string;
+  careerStatus: string;
+  relationshipStatus: string;
+  romanceHistory: string;
+  familySupport: string;
+  lifeEvents: string[];
+};
+
+const MAX_SAVED = 5;
+
+function loadSavedPersons(): SavedPerson[] {
+  try {
+    return JSON.parse(localStorage.getItem("bazi:persons") ?? "[]");
+  } catch {
+    return [];
+  }
+}
+
+function upsertPerson(person: SavedPerson) {
+  const existing = loadSavedPersons().filter((p) => p.id !== person.id);
+  localStorage.setItem("bazi:persons", JSON.stringify([person, ...existing].slice(0, MAX_SAVED)));
+}
+
+function deletePerson(id: string) {
+  localStorage.setItem(
+    "bazi:persons",
+    JSON.stringify(loadSavedPersons().filter((p) => p.id !== id))
+  );
+}
+
+function genderShort(g: string) {
+  return { female: "女", male: "男" }[g] ?? "其他";
+}
 
 const careerOptions = ["学生", "求职中", "在职", "创业中", "自由职业", "待业"];
 const relationshipOptions = ["单身", "暧昧中", "恋爱中", "已订婚", "已婚", "离异", "分居"];
@@ -61,12 +105,50 @@ function SectionTitle({
 
 export default function BaziIntakeForm() {
   const router = useRouter();
+
+  // Core form state
   const [birthTimeUnknown, setBirthTimeUnknown] = useState(false);
   const [locationQuery, setLocationQuery] = useState("");
   const [locationResults, setLocationResults] = useState<LocationResult[]>([]);
   const [selectedLocation, setSelectedLocation] = useState<LocationResult | null>(null);
   const [searching, setSearching] = useState(false);
   const [locationError, setLocationError] = useState("");
+  const [auxOpen, setAuxOpen] = useState(false);
+
+  // History state
+  const [savedPersons, setSavedPersons] = useState<SavedPerson[]>([]);
+  const [prefillKey, setPrefillKey] = useState(0);
+  const [prefill, setPrefill] = useState<SavedPerson | null>(null);
+
+  useEffect(() => {
+    setSavedPersons(loadSavedPersons());
+  }, []);
+
+  function applyPerson(person: SavedPerson) {
+    setBirthTimeUnknown(person.birthTimeUnknown);
+    setSelectedLocation(person.location);
+    setLocationQuery(person.locationQuery);
+    setLocationResults([]);
+    setLocationError("");
+    setAuxOpen(
+      Boolean(
+        person.education ||
+          person.careerStatus ||
+          person.relationshipStatus ||
+          person.romanceHistory ||
+          person.familySupport ||
+          person.lifeEvents.length
+      )
+    );
+    setPrefill(person);
+    setPrefillKey((k) => k + 1);
+  }
+
+  function handleDeletePerson(id: string) {
+    deletePerson(id);
+    setSavedPersons(loadSavedPersons());
+    if (prefill?.id === id) setPrefill(null);
+  }
 
   async function searchLocation() {
     const query = locationQuery.trim();
@@ -124,6 +206,25 @@ export default function BaziIntakeForm() {
       lifeEvents: form.getAll("lifeEvents").map(String)
     };
 
+    // Save to history (without question)
+    const personId = [payload.birthDate, payload.birthTime || "unknown", payload.birthCountry, payload.birthCity, payload.gender].join("|");
+    upsertPerson({
+      id: personId,
+      birthDate: payload.birthDate,
+      birthTime: payload.birthTime,
+      birthTimeUnknown,
+      location: selectedLocation,
+      locationQuery,
+      birthPlaceDetail: payload.birthPlaceDetail,
+      gender: payload.gender,
+      education: payload.education,
+      careerStatus: payload.careerStatus,
+      relationshipStatus: payload.relationshipStatus,
+      romanceHistory: payload.romanceHistory,
+      familySupport: payload.familySupport,
+      lifeEvents: payload.lifeEvents
+    });
+
     sessionStorage.setItem("bazi:intake", JSON.stringify(payload));
     sessionStorage.removeItem("bazi:chart");
     router.push("/bazi/loading");
@@ -131,9 +232,11 @@ export default function BaziIntakeForm() {
 
   return (
     <form
+      key={prefillKey}
       onSubmit={onSubmit}
       className="overflow-hidden rounded-lg border border-white/70 bg-white/82 shadow-[0_18px_60px_rgba(39,54,47,0.14)] backdrop-blur"
     >
+      {/* Header */}
       <div className="border-b border-ink/10 bg-white/70 px-5 py-4 md:px-7">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
@@ -144,6 +247,46 @@ export default function BaziIntakeForm() {
             <span className="font-semibold">*</span> 必填信息
           </p>
         </div>
+
+        {/* History panel */}
+        {savedPersons.length > 0 && (
+          <div className="mt-4 border-t border-ink/8 pt-4">
+            <p className="mb-2 text-xs font-medium text-moss">历史记录 — 点击快速填入</p>
+            <div className="flex gap-2 overflow-x-auto pb-1">
+              {savedPersons.map((person) => (
+                <div
+                  key={person.id}
+                  className={`flex flex-shrink-0 items-stretch overflow-hidden rounded-md border transition ${
+                    prefill?.id === person.id
+                      ? "border-jade bg-jade/10"
+                      : "border-ink/15 bg-paper/60"
+                  }`}
+                >
+                  <button
+                    type="button"
+                    onClick={() => applyPerson(person)}
+                    className="px-3 py-2 text-left text-xs hover:bg-jade/10 transition"
+                  >
+                    <span className="block font-medium text-ink">
+                      {person.birthDate} · {genderShort(person.gender)}
+                    </span>
+                    <span className="mt-0.5 block text-moss">
+                      {person.location.city || person.location.name}
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleDeletePerson(person.id)}
+                    title="删除"
+                    className="border-l border-ink/10 px-2.5 text-sm text-moss/50 transition hover:bg-ember/8 hover:text-ember"
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="space-y-8 p-5 md:p-7">
@@ -158,7 +301,13 @@ export default function BaziIntakeForm() {
             <label className="block text-sm font-medium">
               具体生日日期
               <RequiredMark />
-              <input name="birthDate" type="date" required className={fieldClass} />
+              <input
+                name="birthDate"
+                type="date"
+                required
+                defaultValue={prefill?.birthDate ?? ""}
+                className={fieldClass}
+              />
             </label>
 
             <div>
@@ -170,6 +319,7 @@ export default function BaziIntakeForm() {
                   type="time"
                   required={!birthTimeUnknown}
                   disabled={birthTimeUnknown}
+                  defaultValue={prefill?.birthTime ?? ""}
                   className={fieldClass}
                 />
               </label>
@@ -178,7 +328,7 @@ export default function BaziIntakeForm() {
                   name="birthTimeUnknown"
                   type="checkbox"
                   checked={birthTimeUnknown}
-                  onChange={(event) => setBirthTimeUnknown(event.target.checked)}
+                  onChange={(e) => setBirthTimeUnknown(e.target.checked)}
                   className="h-4 w-4 accent-jade"
                 />
                 不确定具体出生时间
@@ -192,13 +342,13 @@ export default function BaziIntakeForm() {
                 <div className="mt-2 flex flex-col gap-3 sm:flex-row">
                   <input
                     value={locationQuery}
-                    onChange={(event) => {
-                      setLocationQuery(event.target.value);
+                    onChange={(e) => {
+                      setLocationQuery(e.target.value);
                       setSelectedLocation(null);
                     }}
-                    onKeyDown={(event) => {
-                      if (event.key === "Enter") {
-                        event.preventDefault();
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
                         searchLocation();
                       }
                     }}
@@ -216,6 +366,12 @@ export default function BaziIntakeForm() {
                 </div>
               </label>
 
+              {selectedLocation && locationResults.length === 0 && (
+                <p className="mt-2 text-xs text-jade">
+                  已选择：{selectedLocation.name}
+                </p>
+              )}
+
               {locationError ? (
                 <p className="mt-3 rounded-md border border-ember/20 bg-ember/10 px-3 py-2 text-sm text-ember">
                   {locationError}
@@ -226,7 +382,6 @@ export default function BaziIntakeForm() {
                 <div className="mt-3 grid gap-2 rounded-md border border-ink/10 bg-paper/70 p-2">
                   {locationResults.map((result) => {
                     const selected = selectedLocation?.id === result.id;
-
                     return (
                       <button
                         key={result.id}
@@ -244,7 +399,8 @@ export default function BaziIntakeForm() {
                       >
                         <span className="block font-medium text-ink">{result.name}</span>
                         <span className="mt-1 block text-xs">
-                          经度 {Number(result.longitude).toFixed(4)} · 纬度 {Number(result.latitude).toFixed(4)}
+                          经度 {Number(result.longitude).toFixed(4)} · 纬度{" "}
+                          {Number(result.latitude).toFixed(4)}
                         </span>
                       </button>
                     );
@@ -255,13 +411,23 @@ export default function BaziIntakeForm() {
 
             <label className="block text-sm font-medium md:col-span-2">
               具体区县 / 出生地补充
-              <input name="birthPlaceDetail" placeholder="可补充医院、区县、街区；不填则使用搜索结果" className={fieldClass} />
+              <input
+                name="birthPlaceDetail"
+                defaultValue={prefill?.birthPlaceDetail ?? ""}
+                placeholder="可补充医院、区县、街区；不填则使用搜索结果"
+                className={fieldClass}
+              />
             </label>
 
             <label className="block text-sm font-medium md:col-span-2">
               性别
               <RequiredMark />
-              <select name="gender" required defaultValue="" className={fieldClass}>
+              <select
+                name="gender"
+                required
+                defaultValue={prefill?.gender ?? ""}
+                className={fieldClass}
+              >
                 <option value="" disabled>
                   请选择性别
                 </option>
@@ -287,7 +453,11 @@ export default function BaziIntakeForm() {
           />
         </section>
 
-        <details className="rounded-lg border border-ink/10 bg-paper/55 p-4 transition open:bg-white/65 md:p-5">
+        <details
+          open={auxOpen}
+          onToggle={(e) => setAuxOpen((e.target as HTMLDetailsElement).open)}
+          className="rounded-lg border border-ink/10 bg-paper/55 p-4 transition open:bg-white/65 md:p-5"
+        >
           <summary className="cursor-pointer text-base font-semibold text-ink">
             展开填写更多辅助信息
           </summary>
@@ -295,12 +465,17 @@ export default function BaziIntakeForm() {
           <div className="mt-5 grid gap-5 md:grid-cols-2">
             <label className="block text-sm font-medium">
               学历信息
-              <input name="education" placeholder="例：本科 / 硕士 / 高中 / 其他" className={fieldClass} />
+              <input
+                name="education"
+                defaultValue={prefill?.education ?? ""}
+                placeholder="例：本科 / 硕士 / 高中 / 其他"
+                className={fieldClass}
+              />
             </label>
 
             <label className="block text-sm font-medium">
               职业状态
-              <select name="careerStatus" defaultValue="" className={fieldClass}>
+              <select name="careerStatus" defaultValue={prefill?.careerStatus ?? ""} className={fieldClass}>
                 <option value="">不填写</option>
                 {careerOptions.map((option) => (
                   <option key={option} value={option}>
@@ -312,7 +487,7 @@ export default function BaziIntakeForm() {
 
             <label className="block text-sm font-medium">
               感情状态
-              <select name="relationshipStatus" defaultValue="" className={fieldClass}>
+              <select name="relationshipStatus" defaultValue={prefill?.relationshipStatus ?? ""} className={fieldClass}>
                 <option value="">不填写</option>
                 {relationshipOptions.map((option) => (
                   <option key={option} value={option}>
@@ -324,7 +499,7 @@ export default function BaziIntakeForm() {
 
             <label className="block text-sm font-medium">
               感情经历
-              <select name="romanceHistory" defaultValue="" className={fieldClass}>
+              <select name="romanceHistory" defaultValue={prefill?.romanceHistory ?? ""} className={fieldClass}>
                 <option value="">不填写</option>
                 {romanceHistoryOptions.map((option) => (
                   <option key={option} value={option}>
@@ -336,7 +511,7 @@ export default function BaziIntakeForm() {
 
             <label className="block text-sm font-medium md:col-span-2">
               家庭支持程度
-              <select name="familySupport" defaultValue="" className={fieldClass}>
+              <select name="familySupport" defaultValue={prefill?.familySupport ?? ""} className={fieldClass}>
                 <option value="">不填写</option>
                 {familySupportOptions.map((option) => (
                   <option key={option} value={option}>
@@ -354,7 +529,13 @@ export default function BaziIntakeForm() {
                     key={option}
                     className="flex min-h-12 items-center gap-3 rounded-md border border-ink/10 bg-white px-3 py-2 text-sm text-moss shadow-sm"
                   >
-                    <input name="lifeEvents" type="checkbox" value={option} className="h-4 w-4 accent-jade" />
+                    <input
+                      name="lifeEvents"
+                      type="checkbox"
+                      value={option}
+                      defaultChecked={prefill?.lifeEvents.includes(option) ?? false}
+                      className="h-4 w-4 accent-jade"
+                    />
                     {option}
                   </label>
                 ))}

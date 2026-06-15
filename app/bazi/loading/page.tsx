@@ -35,6 +35,8 @@ export default function BaziLoadingPage() {
         if (cancelled) return;
         setMessage("整理十神神煞");
         sessionStorage.setItem("bazi:chart", JSON.stringify(data));
+        sessionStorage.removeItem("bazi:reading");
+        sessionStorage.removeItem("bazi:reading:fp");
         window.setTimeout(() => router.replace("/bazi/result"), 900);
       } catch (error) {
         if (cancelled) return;

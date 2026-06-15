@@ -107,6 +107,19 @@ export default function BaziMasterPage() {
   useEffect(() => {
     if (!chart) return;
 
+    const fp = JSON.stringify(chart.input);
+    const cachedFp = sessionStorage.getItem("bazi:reading:fp");
+    const cachedReading = sessionStorage.getItem("bazi:reading");
+
+    if (cachedFp === fp && cachedReading) {
+      try {
+        setReading(JSON.parse(cachedReading));
+        return;
+      } catch {
+        // cache corrupt, fall through
+      }
+    }
+
     setLoading(true);
     setApiError(null);
 
@@ -119,7 +132,11 @@ export default function BaziMasterPage() {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.json();
       })
-      .then((data) => setReading(data))
+      .then((data) => {
+        setReading(data);
+        sessionStorage.setItem("bazi:reading", JSON.stringify(data));
+        sessionStorage.setItem("bazi:reading:fp", JSON.stringify(chart.input));
+      })
       .catch(() => setApiError("解读暂时不可用，请稍后再试"))
       .finally(() => setLoading(false));
   }, [chart]);
@@ -167,6 +184,12 @@ export default function BaziMasterPage() {
               <p className="mt-3 max-w-2xl text-sm leading-7 text-white/68">
                 日主 {chart.dayMaster}，{chart.columns.map((column) => `${column.heavenlyStem.value}${column.earthlyBranch.value}`).join(" / ")}
               </p>
+              <Link
+                href="/bazi/result"
+                className="mt-4 inline-flex items-center gap-1.5 rounded-md border border-white/20 bg-white/10 px-4 py-2 text-sm font-medium text-white/80 transition hover:bg-white/20 hover:text-white"
+              >
+                查看命盘
+              </Link>
             </div>
             <div className="grid gap-1 text-sm text-white/62 lg:text-right">
               <span>{chart.input.birthDate} {chart.input.birthTimeUnknown ? "时辰不详" : chart.input.birthTime}</span>
