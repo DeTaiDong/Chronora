@@ -24,7 +24,7 @@ export default function SiteNav({ showRefill = true }: SiteNavProps) {
           />
           <div className="hidden min-w-0 sm:block">
             <p className="truncate text-sm font-semibold leading-none text-ink">观知 Chronora</p>
-            <p className="mt-1 hidden text-xs text-moss sm:block">八字排盘与问诊实验</p>
+            <p className="mt-1 hidden text-xs text-moss sm:block">八字排盘与问诊工具</p>
           </div>
         </Link>
 

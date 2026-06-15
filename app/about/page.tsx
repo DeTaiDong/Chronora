@@ -45,7 +45,7 @@ export default function AboutPage() {
         <header className="rounded-lg border border-white/70 bg-white/70 p-6 shadow-sm backdrop-blur sm:p-8">
           <p className="text-xs font-semibold uppercase tracking-widest text-ember">About Chronora</p>
           <h1 className="mt-3 text-3xl font-semibold leading-tight text-ink sm:text-4xl">
-            关于八字排盘与这个小实验
+            关于八字排盘与这个项目
           </h1>
           <p className="mt-4 max-w-3xl text-base leading-8 text-moss">
             Chronora 是一个围绕八字排盘、五行、十神与传统神煞资料做的 WebApp。它试着把古籍里的术语和现代交互放在一起，让人可以更轻松地观察一张命盘的结构。
@@ -72,7 +72,7 @@ export default function AboutPage() {
                 做这个项目，主要是因为我对国学、术数和传统文化里的象征体系感兴趣。很多术语看起来玄妙，但背后有一套自洽的语言结构，我想把它整理成一个能看、能玩、能慢慢完善的小工具。
               </p>
               <p>
-                这个 WebApp 目前更偏自娱自乐和学习实验：一边写代码，一边把排盘、神煞、五行展示和 AI 解读边界做得更清楚。若你发现算法、资料或表达有问题，非常欢迎指正，也欢迎一起完善。
+                这个 WebApp 目前更偏自娱自乐和学习项目：一边写代码，一边把排盘、神煞、五行展示和 AI 解读边界做得更清楚。若你发现算法、资料或表达有问题，非常欢迎指正，也欢迎一起完善。
               </p>
             </div>
           </article>
@@ -100,7 +100,7 @@ export default function AboutPage() {
               玄学内容仅供娱乐与文化参考，不构成医疗、法律、投资、职业或人生重大决策建议。请不要把命盘解读视作确定事实，也不要用它替代现实中的专业判断。
             </p>
             <p>
-              Chronora 当前为个人学习与开源实验项目。页面设计、代码实现与整理文字版权归项目作者所有；传统文献与网页资料归其原作者或发布方所有。
+              Chronora 当前为个人学习与开源项目。页面设计、代码实现与整理文字版权归项目作者所有；传统文献与网页资料归其原作者或发布方所有。
             </p>
           </div>
           <div className="mt-5 flex flex-col gap-3 sm:flex-row">
