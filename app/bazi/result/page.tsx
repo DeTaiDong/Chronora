@@ -23,6 +23,14 @@ const elementColorsDark: Record<string, string> = {
   水: "text-blue-400"
 };
 
+const elementBarColors: Record<string, string> = {
+  木: "bg-emerald-500",
+  火: "bg-red-500",
+  土: "bg-yellow-600",
+  金: "bg-zinc-400",
+  水: "bg-blue-500"
+};
+
 // ---- 神煞分类 ----
 const auspiciousStars = new Set([
   "天乙贵人", "太极贵人", "文昌贵人", "天厨贵人", "国印贵人",
@@ -43,6 +51,10 @@ function starTagClass(star: string) {
 // ---- 工具函数 ----
 function genderLabel(value?: string) {
   return { female: "女", male: "男", other: "其他 / 不便分类" }[value ?? ""] ?? value;
+}
+
+function pillarText(column: ChartColumn) {
+  return `${column.heavenlyStem.value}${column.earthlyBranch.value}`;
 }
 
 function HiddenStemList({ column }: { column: ChartColumn }) {
@@ -189,6 +201,61 @@ function ShenShaSection({ columns }: { columns: ChartColumn[] }) {
   );
 }
 
+// ---- 顶部摘要 ----
+function ResultSummary({ chart }: { chart: BaziChart }) {
+  const pillars = chart.columns.map(pillarText).join(" / ");
+  const trueSolarTime = [chart.input.adjustedBirthDate, chart.input.adjustedBirthTime].filter(Boolean).join(" ");
+  const offset = chart.input.trueSolarOffsetMinutes ?? 0;
+  const hasUnknownTime = Boolean(chart.input.birthTimeUnknown);
+
+  const items = [
+    { label: "四柱", value: pillars },
+    { label: "最显五行", value: chart.summary.strongestElement, element: chart.summary.strongestElement },
+    { label: "较弱五行", value: chart.summary.weakestElement, element: chart.summary.weakestElement },
+    { label: "真太阳时", value: `${trueSolarTime || "未计算"} · 修正 ${offset} 分钟` }
+  ];
+
+  return (
+    <section className="mt-5 rounded-xl border border-ink/10 bg-white/82 p-5 shadow-sm sm:p-6">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-widest text-ember">命盘速览</p>
+          <h1 className="mt-1 text-2xl font-semibold text-ink">
+            日主 <span className={elementColors[chart.columns[2]?.heavenlyStem.element] ?? ""}>{chart.dayMaster}</span>
+            ，先看五行与四柱结构
+          </h1>
+          <p className="mt-2 max-w-3xl text-sm leading-6 text-moss">
+            这里先展示排盘结果本身；如果填写了问诊主题或辅助信息，可继续进入“观命先生”做一次性解读。
+          </p>
+        </div>
+        <Link
+          href="/bazi"
+          className="inline-flex shrink-0 items-center justify-center rounded-lg border border-ink/15 bg-white/70 px-4 py-2.5 text-sm font-medium text-ink transition hover:border-jade hover:text-jade"
+        >
+          重新填写
+        </Link>
+      </div>
+
+      <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        {items.map((item) => (
+          <div key={item.label} className="rounded-lg border border-ink/10 bg-paper/45 p-4">
+            <p className="text-xs text-moss">{item.label}</p>
+            <p className={`mt-1 text-base font-semibold leading-6 ${item.element ? elementColors[item.element] : "text-ink"}`}>
+              {item.value}
+            </p>
+          </div>
+        ))}
+      </div>
+
+      {hasUnknownTime ? (
+        <p className="mt-4 rounded-lg border border-ember/20 bg-ember/10 px-4 py-3 text-sm leading-6 text-ember">
+          你选择了“时辰不确定”，时柱、部分神煞与宫位信息会带有参考性偏差，后续解读建议重点看年、月、日柱。
+        </p>
+      ) : null}
+    </section>
+  );
+}
+
 // ---- 侧栏 ----
 function Sidebar({ chart, place, maxElement }: { chart: BaziChart; place: string; maxElement: number }) {
   return (
@@ -253,7 +320,7 @@ function Sidebar({ chart, place, maxElement }: { chart: BaziChart; place: string
               </span>
               <div className="flex-1 h-2.5 overflow-hidden rounded-full bg-ink/10">
                 <div
-                  className="h-full rounded-full bg-jade transition-all duration-500"
+                  className={`h-full rounded-full transition-all duration-500 ${elementBarColors[element] ?? "bg-jade"}`}
                   style={{ width: `${(value / maxElement) * 100}%` }}
                 />
               </div>
@@ -288,19 +355,39 @@ function Sidebar({ chart, place, maxElement }: { chart: BaziChart; place: string
 export default function BaziResultPage() {
   const [chart, setChart] = useState<BaziChart | null>(null);
   const [error, setError] = useState("");
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    const storedError = sessionStorage.getItem("bazi:error");
-    const raw = sessionStorage.getItem("bazi:chart");
+    try {
+      const storedError = sessionStorage.getItem("bazi:error");
+      const raw = sessionStorage.getItem("bazi:chart");
 
-    if (storedError) {
-      setError(storedError);
-      sessionStorage.removeItem("bazi:error");
-      return;
+      if (storedError) {
+        setError(storedError);
+        sessionStorage.removeItem("bazi:error");
+        return;
+      }
+
+      if (raw) setChart(JSON.parse(raw) as BaziChart);
+    } catch {
+      setError("命盘缓存读取失败，请返回重新排盘。");
+      sessionStorage.removeItem("bazi:chart");
+    } finally {
+      setReady(true);
     }
-
-    if (raw) setChart(JSON.parse(raw) as BaziChart);
   }, []);
+
+  if (!ready) {
+    return (
+      <main className="grid min-h-screen place-items-center px-5 text-ink">
+        <section className="max-w-md rounded-xl border border-ink/10 bg-white/80 p-8 text-center shadow-sm">
+          <p className="text-sm font-semibold text-ember">整理命盘结果</p>
+          <h1 className="mt-2 text-2xl font-semibold">正在读取排盘</h1>
+          <p className="mt-3 leading-7 text-moss">请稍候片刻。</p>
+        </section>
+      </main>
+    );
+  }
 
   if (error || !chart) {
     return (
@@ -402,6 +489,8 @@ export default function BaziResultPage() {
           </div>
         </header>
 
+        <ResultSummary chart={chart} />
+
         {/* 主内容区 */}
         <div className="mt-5 grid gap-5 xl:grid-cols-[1fr_340px] 2xl:grid-cols-[1fr_380px]">
           <div className="space-y-5">
@@ -471,27 +560,29 @@ export default function BaziResultPage() {
           </div>
         </div>
 
-        {canAskMaster ? (
-          <section className="mt-5 rounded-xl border border-ink/10 bg-white/80 p-5 shadow-sm sm:p-6">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-widest text-ember">
-                  观命先生
-                </p>
-                <h2 className="mt-1 text-xl font-semibold text-ink">请先生据盘细看</h2>
-                <p className="mt-2 text-sm leading-6 text-moss">
-                  已检测到问诊主题或辅助信息，可进入一次性解读页面。
-                </p>
-              </div>
-              <Link
-                href="/bazi/master"
-                className="inline-flex items-center justify-center rounded-lg bg-ink px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-jade focus:outline-none focus:ring-2 focus:ring-jade/40"
-              >
-                请先生解盘
-              </Link>
+        <section className="mt-5 rounded-xl border border-ink/10 bg-white/80 p-5 shadow-sm sm:p-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-widest text-ember">
+                观命先生
+              </p>
+              <h2 className="mt-1 text-xl font-semibold text-ink">
+                {canAskMaster ? "请先生据盘细看" : "补充问诊主题后再细看"}
+              </h2>
+              <p className="mt-2 text-sm leading-6 text-moss">
+                {canAskMaster
+                  ? "已检测到问诊主题或辅助信息，可进入一次性解读页面。"
+                  : "当前只有基础命盘。若想看事业、感情、流年或具体问题，建议先返回补充问诊主题。"}
+              </p>
             </div>
-          </section>
-        ) : null}
+            <Link
+              href={canAskMaster ? "/bazi/master" : "/bazi"}
+              className="inline-flex items-center justify-center rounded-lg bg-ink px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-jade focus:outline-none focus:ring-2 focus:ring-jade/40"
+            >
+              {canAskMaster ? "请先生解盘" : "返回补充问题"}
+            </Link>
+          </div>
+        </section>
       </div>
     </main>
   );
