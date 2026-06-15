@@ -49,11 +49,20 @@ function ReadingBox({ reading }: { reading: FortuneMasterResponse | null }) {
         <h2 className="mt-1 text-2xl font-semibold text-ink">{reading.title}</h2>
       </div>
 
-      <textarea
-        readOnly
-        value={reading.answer}
-        className="block min-h-[360px] w-full resize-y border-0 bg-transparent px-5 py-5 text-base leading-8 text-ink outline-none sm:px-6"
-      />
+      <div className="min-h-[360px] space-y-5 px-5 py-5 sm:px-6">
+        {reading.answer
+          .split(/\n\n+/)
+          .filter(Boolean)
+          .map((para, i) => (
+            <p
+              key={i}
+              className="answer-para font-zh-reading text-[1.05rem] leading-9 text-ink"
+              style={{ animationDelay: `${i * 180}ms` }}
+            >
+              {para.trim()}
+            </p>
+          ))}
+      </div>
 
       {(reading.focusAreas.length > 0 || reading.cautions.length > 0) && (
         <div className="grid gap-4 border-t border-ink/10 bg-paper/45 px-5 py-5 sm:grid-cols-2 sm:px-6">
@@ -172,7 +181,7 @@ export default function BaziMasterPage() {
     .join(" / ");
 
   return (
-    <main className="min-h-screen bg-paper px-4 py-5 text-ink sm:px-6 lg:px-8">
+    <main className="min-h-screen px-4 py-5 text-ink sm:px-6 lg:px-8">
       <div className="mx-auto max-w-6xl">
         <SiteNav />
 

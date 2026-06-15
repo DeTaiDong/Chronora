@@ -3,7 +3,7 @@ import SiteNav from "@/components/SiteNav";
 
 export default function BaziPage() {
   return (
-    <main className="min-h-screen bg-[linear-gradient(135deg,#fbf8ef_0%,#f2eadc_46%,#e8f0ea_100%)] px-5 py-6 text-ink sm:px-8 lg:px-12">
+    <main className="min-h-screen px-5 py-6 text-ink sm:px-8 lg:px-12">
       <div className="mx-auto max-w-7xl">
         <SiteNav />
 

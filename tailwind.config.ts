@@ -7,12 +7,21 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        "zh-title": ["var(--font-ma-shan-zheng)", "serif"],
+        "zh-reading": ["var(--font-noto-serif-sc)", "serif"]
+      },
       colors: {
-        ink: "#17201d",
-        moss: "#526a5b",
-        ember: "#b75b38",
-        paper: "#faf7f0",
-        jade: "#2f7d6d"
+        ink: "#2b261f",
+        moss: "#6f6658",
+        ember: "#9b4a3f",
+        paper: "#f6f1e7",
+        jade: "#6f7f4f",
+        gold: {
+          DEFAULT: "#8a6a35",
+          light: "#c9a86a",
+          dark: "#4a3820"
+        }
       }
     }
   },

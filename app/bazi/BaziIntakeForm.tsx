@@ -79,7 +79,7 @@ const lifeEventOptions = [
 ];
 
 const fieldClass =
-  "mt-2 w-full rounded-md border border-ink/15 bg-white px-3 py-3 text-ink shadow-sm outline-none transition placeholder:text-moss/55 focus:border-jade focus:ring-2 focus:ring-jade/15 disabled:bg-ink/5 disabled:text-moss";
+  "mt-2 w-full rounded-2xl border border-gold/20 bg-[rgba(255,252,245,0.9)] px-4 py-3.5 text-ink shadow-sm outline-none transition placeholder:text-moss/50 focus:border-gold-light focus:ring-2 focus:ring-gold-light/20 disabled:bg-ink/5 disabled:text-moss";
 
 function RequiredMark() {
   return <span className="ml-1 text-ember">*</span>;
@@ -359,7 +359,7 @@ export default function BaziIntakeForm() {
                     type="button"
                     onClick={searchLocation}
                     disabled={searching}
-                    className="rounded-md bg-ink px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-jade disabled:cursor-not-allowed disabled:opacity-60"
+                    className="rounded-full border border-gold/30 bg-[rgba(255,250,241,0.72)] px-6 py-3.5 text-sm font-semibold text-gold-dark shadow-sm transition hover:bg-[rgba(255,250,241,0.95)] disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     {searching ? "搜索中" : "搜索"}
                   </button>
@@ -549,7 +549,7 @@ export default function BaziIntakeForm() {
         <p className="text-sm leading-6 text-moss">点击下一步后，将进入八字排盘加载页。</p>
         <button
           type="submit"
-          className="rounded-md bg-ink px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-jade focus:outline-none focus:ring-2 focus:ring-jade/40"
+          className="rounded-full bg-gradient-to-br from-gold to-[#b8914f] px-8 py-3.5 text-sm font-semibold text-[#fffaf1] shadow-[0_10px_24px_rgba(138,106,53,0.22)] transition hover:brightness-110 hover:shadow-[0_14px_32px_rgba(138,106,53,0.30)] focus:outline-none focus:ring-2 focus:ring-gold-light/40"
         >
           下一步
         </button>

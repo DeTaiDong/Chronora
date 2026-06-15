@@ -3,19 +3,16 @@ import SiteNav from "@/components/SiteNav";
 
 export default function Home() {
   return (
-    <main className="min-h-screen overflow-hidden bg-paper text-ink">
+    <main className="min-h-screen overflow-hidden text-ink">
       <section className="relative flex min-h-screen flex-col px-5 py-5 sm:px-8 lg:px-12">
-        <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_18%_18%,rgba(183,91,56,0.18),transparent_28%),radial-gradient(circle_at_82%_16%,rgba(47,125,109,0.16),transparent_30%),linear-gradient(135deg,#fbf8ef_0%,#f0eadc_42%,#e8eee8_100%)]" />
+        <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_18%_18%,rgba(138,106,53,0.10),transparent_30%),radial-gradient(circle_at_82%_16%,rgba(111,127,79,0.08),transparent_32%)]" />
         <div className="absolute inset-x-0 top-0 -z-10 h-36 border-b border-ink/10 bg-white/25 backdrop-blur-sm" />
 
         <SiteNav showRefill={false} />
 
         <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col items-center justify-center gap-12 py-14 text-center">
           <div>
-            <p className="mb-6 inline-flex rounded border border-ember/25 bg-white/55 px-3 py-1 text-sm font-medium text-ember">
-              Chronora
-            </p>
-            <h1 className="text-4xl font-semibold leading-tight text-ink sm:text-5xl lg:text-6xl">
+            <h1 className="font-zh-title text-5xl leading-snug text-ink sm:text-6xl lg:text-7xl">
               观时成象，
               <span className="block text-jade">以术数照见人生纹理。</span>
             </h1>
@@ -26,16 +23,16 @@ export default function Home() {
 
           <Link
             href="/bazi"
-            className="group flex w-full max-w-sm flex-col items-center gap-4 rounded-lg border border-ink/10 bg-white/75 p-8 shadow-[0_18px_45px_rgba(39,54,47,0.11)] backdrop-blur transition hover:-translate-y-1 hover:border-jade/50 hover:bg-white focus:outline-none focus:ring-2 focus:ring-jade/50"
+            className="group flex w-full max-w-xs flex-col items-center gap-3 rounded-3xl border border-[rgba(138,106,53,0.18)] bg-[rgba(255,250,241,0.72)] px-6 py-7 shadow-[0_16px_40px_rgba(86,62,30,0.08)] backdrop-blur-[8px] transition hover:-translate-y-1 hover:bg-[rgba(255,250,241,0.88)] focus:outline-none focus:ring-2 focus:ring-gold-light/40"
           >
-            <div className="grid h-16 w-16 place-items-center rounded-md border border-ink/10 bg-paper text-3xl font-semibold text-ink transition group-hover:border-jade/40 group-hover:text-jade">
+            <div className="grid h-14 w-14 place-items-center rounded-full border-2 border-gold/40 font-zh-title text-2xl text-gold-dark transition group-hover:border-gold group-hover:text-gold">
               观
             </div>
-            <div>
-              <h2 className="text-2xl font-semibold text-ink">八字命理</h2>
-              <p className="mt-2 text-sm font-medium text-jade">四柱排盘 / 五行十神 / 先生解读</p>
+            <div className="text-center">
+              <h2 className="text-xl font-semibold text-ink">八字命理</h2>
+              <p className="mt-1.5 text-sm font-medium text-gold">四柱排盘 / 五行十神 / 先生解读</p>
             </div>
-            <span className="mt-2 flex items-center text-sm font-semibold text-ink transition group-hover:text-jade">
+            <span className="mt-1 flex items-center text-sm font-semibold text-ink/70 transition group-hover:text-gold-dark">
               开始填写信息
               <span className="ml-2 transition group-hover:translate-x-1">→</span>
             </span>

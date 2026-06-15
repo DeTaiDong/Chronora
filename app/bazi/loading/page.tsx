@@ -53,7 +53,7 @@ export default function BaziLoadingPage() {
   }, [router]);
 
   return (
-    <main className="grid min-h-screen place-items-center bg-[#f5f0e4] px-5 text-[#1b1712]">
+    <main className="grid min-h-screen place-items-center px-5 text-[#1b1712]">
       <section className="w-full max-w-xl text-center">
         <div className="mx-auto grid h-80 w-80 place-items-center rounded-full border border-[#c8b98f] bg-[#fffdf7] shadow-[0_26px_80px_rgba(55,42,22,0.18)] sm:h-[28rem] sm:w-[28rem]">
           <div className="relative h-72 w-72 animate-[spin_10s_linear_infinite] overflow-hidden rounded-full sm:h-96 sm:w-96">

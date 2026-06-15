@@ -304,7 +304,7 @@ export default function BaziResultPage() {
 
   if (error || !chart) {
     return (
-      <main className="grid min-h-screen place-items-center bg-paper px-5 text-ink">
+      <main className="grid min-h-screen place-items-center px-5 text-ink">
         <section className="max-w-md rounded-xl border border-ink/10 bg-white/80 p-8 text-center shadow-sm">
           <h1 className="text-2xl font-semibold">
             {error ? "排盘失败" : "没有找到排盘结果"}
@@ -333,7 +333,7 @@ export default function BaziResultPage() {
   const canAskMaster = hasSecondaryInfo(chart.input);
 
   return (
-    <main className="min-h-screen bg-paper px-4 py-5 text-ink sm:px-6 lg:px-8">
+    <main className="min-h-screen px-4 py-5 text-ink sm:px-6 lg:px-8">
       <div className="mx-auto max-w-[1400px]">
         <SiteNav />
 
