@@ -234,7 +234,7 @@ export default function BaziIntakeForm() {
     <form
       key={prefillKey}
       onSubmit={onSubmit}
-      className="overflow-hidden rounded-lg border border-white/70 bg-white/82 shadow-[0_18px_60px_rgba(39,54,47,0.14)] backdrop-blur"
+      className="overflow-hidden rounded-lg border border-white/70 bg-white/80 shadow-[0_18px_60px_rgba(39,54,47,0.14)] backdrop-blur"
     >
       {/* Header */}
       <div className="border-b border-ink/10 bg-white/70 px-5 py-4 md:px-7">
@@ -545,7 +545,7 @@ export default function BaziIntakeForm() {
         </details>
       </div>
 
-      <div className="flex flex-col gap-3 border-t border-ink/10 bg-white/76 px-5 py-4 md:flex-row md:items-center md:justify-between md:px-7">
+      <div className="flex flex-col gap-3 border-t border-ink/10 bg-white/75 px-5 py-4 md:flex-row md:items-center md:justify-between md:px-7">
         <p className="text-sm leading-6 text-moss">点击下一步后，将进入八字排盘加载页。</p>
         <button
           type="submit"

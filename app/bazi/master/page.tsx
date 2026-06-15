@@ -190,7 +190,7 @@ export default function BaziMasterPage() {
           <div className="mt-3 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
             <div>
               <h1 className="text-3xl font-semibold text-white sm:text-4xl">据盘问事，一事一断</h1>
-              <p className="mt-3 max-w-2xl text-sm leading-7 text-white/68">
+              <p className="mt-3 max-w-2xl text-sm leading-7 text-white/70">
                 日主 {chart.dayMaster}，{chart.columns.map((column) => `${column.heavenlyStem.value}${column.earthlyBranch.value}`).join(" / ")}
               </p>
               <Link
@@ -200,7 +200,7 @@ export default function BaziMasterPage() {
                 查看命盘
               </Link>
             </div>
-            <div className="grid gap-1 text-sm text-white/62 lg:text-right">
+            <div className="grid gap-1 text-sm text-white/60 lg:text-right">
               <span>{chart.input.birthDate} {chart.input.birthTimeUnknown ? "时辰不详" : chart.input.birthTime}</span>
               <span>{place}</span>
               <span>{genderLabel(chart.input.gender)}</span>

@@ -216,7 +216,7 @@ function ResultSummary({ chart }: { chart: BaziChart }) {
   ];
 
   return (
-    <section className="mt-5 rounded-xl border border-ink/10 bg-white/82 p-5 shadow-sm sm:p-6">
+    <section className="mt-5 rounded-xl border border-ink/10 bg-white/80 p-5 shadow-sm sm:p-6">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div>
           <p className="text-xs font-semibold uppercase tracking-widest text-ember">命盘速览</p>
@@ -475,7 +475,7 @@ export default function BaziResultPage() {
               <div className="flex items-end gap-6 sm:gap-8">
                 {chart.columns.map((col) => (
                   <div key={col.label} className="text-center">
-                    <p className="mb-2 text-xs text-white/35">{col.label}</p>
+                    <p className="mb-2 text-xs text-white/40">{col.label}</p>
                     <p className={`text-3xl font-bold leading-none sm:text-4xl ${elementColorsDark[col.heavenlyStem.element] ?? "text-white"}`}>
                       {col.heavenlyStem.value}
                     </p>

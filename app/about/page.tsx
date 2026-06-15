@@ -42,7 +42,7 @@ export default function AboutPage() {
       <SiteNav />
 
       <div className="mx-auto max-w-5xl py-8 sm:py-10">
-        <header className="rounded-lg border border-white/70 bg-white/62 p-6 shadow-sm backdrop-blur sm:p-8">
+        <header className="rounded-lg border border-white/70 bg-white/70 p-6 shadow-sm backdrop-blur sm:p-8">
           <p className="text-xs font-semibold uppercase tracking-widest text-ember">About Chronora</p>
           <h1 className="mt-3 text-3xl font-semibold leading-tight text-ink sm:text-4xl">
             关于八字排盘与这个小实验
@@ -93,7 +93,7 @@ export default function AboutPage() {
           </div>
         </section>
 
-        <section className="mt-5 rounded-lg border border-ember/20 bg-white/82 p-5 shadow-sm sm:p-6">
+        <section className="mt-5 rounded-lg border border-ember/20 bg-white/80 p-5 shadow-sm sm:p-6">
           <h2 className="text-xl font-semibold text-ink">声明与版权</h2>
           <div className="mt-4 space-y-3 text-sm leading-7 text-moss">
             <p>
