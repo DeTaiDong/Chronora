@@ -78,6 +78,33 @@ const lifeEventOptions = [
   "无明显重大事件"
 ];
 
+const questionTemplates = [
+  {
+    label: "事业 / 学业",
+    value: "我想看未来一年事业或学业的发展方向，是否适合转型、换环境或加大投入。"
+  },
+  {
+    label: "感情",
+    value: "我想了解近期感情关系的发展，以及自己在亲密关系里需要注意的地方。"
+  },
+  {
+    label: "财运趋势",
+    value: "我想看未来一年财运和收入机会，适合稳守还是主动争取新的机会。"
+  },
+  {
+    label: "流年",
+    value: "我想看未来一年整体运势重点，哪些方面适合推进，哪些方面需要谨慎。"
+  },
+  {
+    label: "适合方向",
+    value: "我想了解自己更适合的发展方向，包括工作类型、学习路径或长期选择。"
+  },
+  {
+    label: "性格优势",
+    value: "我想了解自己的性格优势、容易卡住的地方，以及如何更好地发挥长处。"
+  }
+];
+
 const fieldClass =
   "mt-2 w-full rounded-2xl border border-gold/20 bg-[rgba(255,252,245,0.9)] px-4 py-3.5 text-ink shadow-sm outline-none transition placeholder:text-moss/50 focus:border-gold-light focus:ring-2 focus:ring-gold-light/20 disabled:bg-ink/5 disabled:text-moss";
 
@@ -113,6 +140,7 @@ export default function BaziIntakeForm() {
   const [selectedLocation, setSelectedLocation] = useState<LocationResult | null>(null);
   const [searching, setSearching] = useState(false);
   const [locationError, setLocationError] = useState("");
+  const [question, setQuestion] = useState("");
   const [auxOpen, setAuxOpen] = useState(false);
 
   // History state
@@ -445,9 +473,23 @@ export default function BaziIntakeForm() {
             title="你想预测的问题"
             description="这项不强制，但会显著影响后续解读方向。可以写具体问题，也可以写当前最困扰你的主题。"
           />
+          <div className="mb-3 flex flex-wrap gap-2">
+            {questionTemplates.map((template) => (
+              <button
+                key={template.label}
+                type="button"
+                onClick={() => setQuestion(template.value)}
+                className="rounded-full border border-ink/12 bg-paper/70 px-3 py-1.5 text-xs font-medium text-moss transition hover:border-jade/40 hover:bg-jade/10 hover:text-jade focus:outline-none focus:ring-2 focus:ring-jade/20"
+              >
+                {template.label}
+              </button>
+            ))}
+          </div>
           <textarea
             name="question"
             rows={5}
+            value={question}
+            onChange={(event) => setQuestion(event.target.value)}
             placeholder="例：我想看未来一年事业是否适合转行；或者我想了解感情关系的发展。"
             className={`${fieldClass} resize-y`}
           />

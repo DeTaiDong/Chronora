@@ -12,6 +12,27 @@ type InfoItem = {
   value?: string;
 };
 
+type FortuneMasterApiError = {
+  code: string;
+  message: string;
+  detail?: string;
+};
+
+type FortuneMasterApiErrorResponse = {
+  error?: FortuneMasterApiError | string;
+};
+
+function getApiErrorMessage(payload: FortuneMasterApiErrorResponse | null, fallback: string) {
+  if (!payload?.error) return fallback;
+  if (typeof payload.error === "string") return payload.error;
+  return payload.error.message || fallback;
+}
+
+function getApiErrorDetail(payload: FortuneMasterApiErrorResponse | null) {
+  if (!payload?.error || typeof payload.error === "string") return undefined;
+  return payload.error.detail || payload.error.code;
+}
+
 function genderLabel(value?: string) {
   return { female: "女", male: "男", other: "其他 / 不便分类" }[value ?? ""] ?? value;
 }
@@ -99,6 +120,7 @@ export default function BaziMasterPage() {
   const [reading, setReading] = useState<FortuneMasterResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
+  const [apiErrorDetail, setApiErrorDetail] = useState<string | null>(null);
 
   useEffect(() => {
     const raw = sessionStorage.getItem("bazi:chart");
@@ -131,22 +153,38 @@ export default function BaziMasterPage() {
 
     setLoading(true);
     setApiError(null);
+    setApiErrorDetail(null);
 
     fetch("/api/fortune-master/generate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(chart)
     })
-      .then((res) => {
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return res.json();
+      .then(async (res) => {
+        const data = (await res.json().catch(() => null)) as
+          | FortuneMasterResponse
+          | FortuneMasterApiErrorResponse
+          | null;
+
+        if (!res.ok) {
+          const fallback = `AI 解读请求失败（HTTP ${res.status}）`;
+          setApiError(getApiErrorMessage(data as FortuneMasterApiErrorResponse | null, fallback));
+          setApiErrorDetail(getApiErrorDetail(data as FortuneMasterApiErrorResponse | null) ?? null);
+          return null;
+        }
+
+        return data as FortuneMasterResponse | null;
       })
       .then((data) => {
+        if (!data) return;
         setReading(data);
         sessionStorage.setItem("bazi:reading", JSON.stringify(data));
         sessionStorage.setItem("bazi:reading:fp", JSON.stringify(chart.input));
       })
-      .catch(() => setApiError("解读暂时不可用，请稍后再试"))
+      .catch((error) => {
+        setApiError("无法连接 AI 解读接口，请检查本机网络、开发服务器或校园代理。");
+        setApiErrorDetail(error instanceof Error ? error.message : String(error));
+      })
       .finally(() => setLoading(false));
   }, [chart]);
 
@@ -234,6 +272,11 @@ export default function BaziMasterPage() {
           ) : apiError ? (
             <section className="rounded-lg border border-ink/10 bg-white/80 p-8 shadow-sm text-center">
               <p className="text-sm text-ember">{apiError}</p>
+              {apiErrorDetail ? (
+                <p className="mt-3 break-words rounded-md border border-ember/15 bg-ember/8 px-3 py-2 text-left text-xs leading-5 text-moss">
+                  技术细节：{apiErrorDetail}
+                </p>
+              ) : null}
             </section>
           ) : (
             <ReadingBox reading={reading} />
