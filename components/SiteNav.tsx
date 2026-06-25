@@ -15,7 +15,7 @@ export default function SiteNav({ showRefill = true }: SiteNavProps) {
           className="flex min-w-0 shrink items-center gap-2.5 rounded-md px-1 py-1 focus:outline-none focus:ring-2 focus:ring-jade/40"
         >
           <Image
-            src="/icon.svg"
+            src="/logo.png"
             alt=""
             width={44}
             height={44}

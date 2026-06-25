@@ -22,7 +22,7 @@ export const metadata: Metadata = {
   title: "观石 Chronora",
   description: "观石 Chronora：东方术数问诊与八字排盘工具。",
   icons: {
-    icon: "/icon.svg"
+    icon: "/logo.png"
   }
 };
 

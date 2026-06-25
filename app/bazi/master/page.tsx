@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { BaziChart, BaziInput } from "@/app/bazi/chartEngine";
 import type { FortuneMasterResponse } from "@/lib/fortune-master";
 import { hasSecondaryInfo } from "@/lib/fortune-master";
@@ -21,6 +21,22 @@ type FortuneMasterApiError = {
 type FortuneMasterApiErrorResponse = {
   error?: FortuneMasterApiError | string;
 };
+
+function useReveal(threshold = 0.1) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const io = new IntersectionObserver(
+      ([e]) => { if (e.isIntersecting) { setVisible(true); io.disconnect(); } },
+      { threshold },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [threshold]);
+  return [ref, visible] as const;
+}
 
 function getApiErrorMessage(payload: FortuneMasterApiErrorResponse | null, fallback: string) {
   if (!payload?.error) return fallback;
@@ -52,7 +68,7 @@ function infoItems(input: BaziInput): InfoItem[] {
 function ReadingBox({ reading }: { reading: FortuneMasterResponse | null }) {
   if (!reading) {
     return (
-      <section className="rounded-lg border border-ink/10 bg-white/80 p-6 shadow-sm">
+      <section className="opacity-0 animate-fade-up rounded-lg border border-ink/10 bg-white/80 p-6 shadow-sm">
         <p className="text-xs font-semibold uppercase tracking-widest text-ember">先生未开口</p>
         <p className="mt-3 text-sm leading-7 text-moss">
           用户未留下明确问题，依照规则不作空泛推断。
@@ -62,7 +78,7 @@ function ReadingBox({ reading }: { reading: FortuneMasterResponse | null }) {
   }
 
   return (
-    <section className="rounded-lg border border-ink/10 bg-white/85 shadow-sm">
+    <section className="opacity-0 animate-fade-up rounded-lg border border-ink/10 bg-white/85 shadow-sm">
       <div className="border-b border-ink/10 px-5 py-4 sm:px-6">
         <p className="text-xs font-semibold uppercase tracking-widest text-ember">
           {reading.isRefusal ? "不入命盘" : "先生批语"}
@@ -91,8 +107,14 @@ function ReadingBox({ reading }: { reading: FortuneMasterResponse | null }) {
             <div>
               <p className="text-sm font-semibold text-ink">可留意</p>
               <ul className="mt-3 space-y-2 text-sm leading-6 text-moss">
-                {reading.focusAreas.map((item) => (
-                  <li key={item}>{item}</li>
+                {reading.focusAreas.map((item, i) => (
+                  <li
+                    key={item}
+                    className="opacity-0 animate-fade-up"
+                    style={{ animationDelay: `${i * 80 + 200}ms` }}
+                  >
+                    {item}
+                  </li>
                 ))}
               </ul>
             </div>
@@ -102,8 +124,14 @@ function ReadingBox({ reading }: { reading: FortuneMasterResponse | null }) {
             <div>
               <p className="text-sm font-semibold text-ink">分寸</p>
               <ul className="mt-3 space-y-2 text-sm leading-6 text-moss">
-                {reading.cautions.map((item) => (
-                  <li key={item}>{item}</li>
+                {reading.cautions.map((item, i) => (
+                  <li
+                    key={item}
+                    className="opacity-0 animate-fade-up"
+                    style={{ animationDelay: `${i * 80 + 200}ms` }}
+                  >
+                    {item}
+                  </li>
                 ))}
               </ul>
             </div>
@@ -121,6 +149,8 @@ export default function BaziMasterPage() {
   const [loading, setLoading] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
   const [apiErrorDetail, setApiErrorDetail] = useState<string | null>(null);
+
+  const [infoRef, infoVisible] = useReveal();
 
   useEffect(() => {
     const raw = sessionStorage.getItem("bazi:chart");
@@ -223,22 +253,40 @@ export default function BaziMasterPage() {
       <div className="mx-auto max-w-6xl">
         <SiteNav />
 
-        <header className="mt-5 overflow-hidden rounded-lg bg-[linear-gradient(150deg,#1a1611,#2d261b)] px-5 py-7 shadow-[0_18px_52px_rgba(21,19,15,0.2)] sm:px-7">
-          <p className="text-xs font-semibold uppercase tracking-widest text-[#c9a85d]">观命先生</p>
-          <div className="mt-3 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+        {/* Dark header — breathing gold glow + staggered reveal */}
+        <header className="relative mt-5 overflow-hidden rounded-lg bg-[linear-gradient(150deg,#1a1611,#2d261b)] px-5 py-7 shadow-[0_18px_52px_rgba(21,19,15,0.2)] sm:px-7">
+          {/* Breathing gold glow overlay */}
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_30%_0%,rgba(201,168,93,0.22),transparent_60%)] animate-header-glow" />
+
+          <p className="relative text-xs font-semibold uppercase tracking-widest text-[#c9a85d] opacity-0 animate-ink-reveal">
+            观命先生
+          </p>
+          <div className="relative mt-3 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
             <div>
-              <h1 className="text-3xl font-semibold text-white sm:text-4xl">据盘问事，一事一断</h1>
-              <p className="mt-3 max-w-2xl text-sm leading-7 text-white/70">
+              <h1
+                className="text-3xl font-semibold text-white sm:text-4xl opacity-0 animate-ink-reveal"
+                style={{ animationDelay: "80ms" }}
+              >
+                据盘问事，一事一断
+              </h1>
+              <p
+                className="mt-3 max-w-2xl text-sm leading-7 text-white/70 opacity-0 animate-fade-up"
+                style={{ animationDelay: "200ms" }}
+              >
                 日主 {chart.dayMaster}，{chart.columns.map((column) => `${column.heavenlyStem.value}${column.earthlyBranch.value}`).join(" / ")}
               </p>
               <Link
                 href="/bazi/result"
-                className="mt-4 inline-flex items-center gap-1.5 rounded-md border border-white/20 bg-white/10 px-4 py-2 text-sm font-medium text-white/80 transition hover:bg-white/20 hover:text-white"
+                className="mt-4 inline-flex items-center gap-1.5 rounded-md border border-white/20 bg-white/10 px-4 py-2 text-sm font-medium text-white/80 transition hover:bg-white/20 hover:text-white opacity-0 animate-fade-up"
+                style={{ animationDelay: "280ms" }}
               >
                 查看命盘
               </Link>
             </div>
-            <div className="grid gap-1 text-sm text-white/60 lg:text-right">
+            <div
+              className="grid gap-1 text-sm text-white/60 lg:text-right opacity-0 animate-fade-up"
+              style={{ animationDelay: "360ms" }}
+            >
               <span>{chart.input.birthDate} {chart.input.birthTimeUnknown ? "时辰不详" : chart.input.birthTime}</span>
               <span>{place}</span>
               <span>{genderLabel(chart.input.gender)}</span>
@@ -246,31 +294,50 @@ export default function BaziMasterPage() {
           </div>
         </header>
 
-        <section className="mt-5 rounded-lg border border-ink/10 bg-white/80 p-5 shadow-sm sm:p-6">
-          <div className="mb-4 flex items-end justify-between gap-3">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-widest text-ember">问诊资料</p>
-              <h2 className="mt-1 text-xl font-semibold text-ink">用户留下的辅助信息</h2>
-            </div>
-          </div>
-
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {secondaryInfo.map((item) => (
-              <div key={item.label} className="rounded-md border border-ink/10 bg-paper/45 p-4">
-                <p className="text-xs text-moss">{item.label}</p>
-                <p className="mt-2 text-sm font-medium leading-6 text-ink">{item.value}</p>
+        {/* 问诊资料 — scroll-triggered stagger */}
+        <div ref={infoRef}>
+          <section className="mt-5 rounded-lg border border-ink/10 bg-white/80 p-5 shadow-sm sm:p-6">
+            <div
+              className="mb-4 flex items-end justify-between gap-3"
+              style={{
+                opacity: infoVisible ? 1 : 0,
+                transform: infoVisible ? "none" : "translateY(8px)",
+                transition: "opacity 0.5s ease, transform 0.5s ease",
+              }}
+            >
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-widest text-ember">问诊资料</p>
+                <h2 className="mt-1 text-xl font-semibold text-ink">用户留下的辅助信息</h2>
               </div>
-            ))}
-          </div>
-        </section>
+            </div>
 
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {secondaryInfo.map((item, i) => (
+                <div
+                  key={item.label}
+                  className="rounded-md border border-ink/10 bg-paper/45 p-4"
+                  style={{
+                    opacity: infoVisible ? 1 : 0,
+                    transform: infoVisible ? "none" : "translateY(12px)",
+                    transition: `opacity 0.5s cubic-bezier(0.22,1,0.36,1) ${i * 60 + 60}ms, transform 0.5s cubic-bezier(0.22,1,0.36,1) ${i * 60 + 60}ms`,
+                  }}
+                >
+                  <p className="text-xs text-moss">{item.label}</p>
+                  <p className="mt-2 text-sm font-medium leading-6 text-ink">{item.value}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+        </div>
+
+        {/* Reading — each state fades in on mount */}
         <div className="mt-5">
           {loading ? (
-            <section className="rounded-lg border border-ink/10 bg-white/80 p-8 shadow-sm text-center">
+            <section className="opacity-0 animate-fade-up rounded-lg border border-ink/10 bg-white/80 p-8 shadow-sm text-center">
               <p className="text-sm text-moss animate-pulse">先生正在推演，稍候片刻……</p>
             </section>
           ) : apiError ? (
-            <section className="rounded-lg border border-ink/10 bg-white/80 p-8 shadow-sm text-center">
+            <section className="opacity-0 animate-fade-up rounded-lg border border-ink/10 bg-white/80 p-8 shadow-sm text-center">
               <p className="text-sm text-ember">{apiError}</p>
               {apiErrorDetail ? (
                 <p className="mt-3 break-words rounded-md border border-ember/15 bg-ember/8 px-3 py-2 text-left text-xs leading-5 text-moss">
@@ -279,7 +346,7 @@ export default function BaziMasterPage() {
               ) : null}
             </section>
           ) : (
-            <ReadingBox reading={reading} />
+            <ReadingBox key={reading ? "reading" : "no-reading"} reading={reading} />
           )}
         </div>
       </div>

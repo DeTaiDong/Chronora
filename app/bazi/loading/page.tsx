@@ -85,7 +85,7 @@ export default function BaziLoadingPage() {
                 fill
                 priority
                 sizes="(min-width: 640px) 381px, 272px"
-                className="object-contain"
+                className="object-contain mix-blend-multiply"
               />
             </div>
           </div>
