@@ -6,15 +6,14 @@ export const PALACE_NAMES = [
 ];
 
 // ── 命宫定位 ──────────────────────────────────────────────────────────────
-// 口诀："寅宫起正月，逆布十二支，生时顺安起，命宫在此处。"
-// 正月→寅(2)，逆布：正月=2，二月=1，三月=0，四月=11…
-// 再从子时(0)顺数时辰到达命宫
+// 口诀："寅宫起正月，顺布十二月，逆数生时得命宫。"
+// 寅(index=2)起正月，顺布到生月；再从生月位置逆数时辰
 export function getDestinyPalaceIndex(
   lunarMonth: number,       // 1-12
   hourBranchIndex: number,  // 0-11
 ): number {
-  const monthBase = (3 - lunarMonth + 120) % 12; // 寅(2)逆布后的起点
-  return (monthBase + hourBranchIndex) % 12;
+  const monthPos = (2 + lunarMonth - 1) % 12; // 寅起正月顺推到生月
+  return (monthPos - hourBranchIndex + 12) % 12;
 }
 
 // ── 身宫定位 ──────────────────────────────────────────────────────────────
