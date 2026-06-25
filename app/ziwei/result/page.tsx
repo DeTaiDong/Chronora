@@ -154,7 +154,7 @@ export default function ZiweiResultPage() {
   return (
     <main className="min-h-screen px-4 py-5 text-ink sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
-        <SiteNav />
+        <SiteNav showRefill />
 
         {/* ── 命盘头部 ──────────────────────────────────────────────── */}
         <header className="relative mt-5 overflow-hidden rounded-lg bg-[linear-gradient(150deg,#1a1611,#2d261b)] px-5 py-7 shadow-[0_18px_52px_rgba(21,19,15,0.2)] sm:px-7">

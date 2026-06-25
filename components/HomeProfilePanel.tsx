@@ -49,7 +49,7 @@ export default function HomeProfilePanel() {
           <h2 className="mt-1 text-lg font-semibold text-ink">复用已保存的出生信息</h2>
         </div>
         <Link
-          href="/bazi"
+          href="/profile"
           className="text-xs font-semibold text-jade underline decoration-jade/20 underline-offset-4 transition hover:decoration-jade"
         >
           登记 / 更新

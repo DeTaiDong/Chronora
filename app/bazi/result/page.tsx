@@ -405,7 +405,7 @@ export default function BaziResultPage() {
     // pb-24 reserves space for mobile sticky CTA; xl resets it
     <main className="min-h-screen px-4 pb-24 pt-5 text-ink sm:px-6 lg:px-8 xl:pb-5">
       <div className="mx-auto max-w-[1400px]">
-        <SiteNav />
+        <SiteNav showRefill />
 
         {/* ── 暗色 header：日主 + 四柱（stagger) + 五行强弱 ─── */}
         <header className="mt-4 overflow-hidden rounded-xl shadow-[0_20px_60px_rgba(21,19,15,0.22)]">

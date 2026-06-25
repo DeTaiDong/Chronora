@@ -5,14 +5,16 @@ type SiteNavProps = {
   showRefill?: boolean;
 };
 
-export default function SiteNav({ showRefill = true }: SiteNavProps) {
+export default function SiteNav({ showRefill = false }: SiteNavProps) {
   return (
     <header className="sticky top-3 z-50 mx-auto w-full max-w-7xl px-0">
-      <nav className="flex items-center justify-between gap-2 rounded-lg border border-white/60 bg-white/70 px-2.5 py-2 shadow-[0_12px_34px_rgba(23,32,29,0.12)] backdrop-blur-xl sm:px-4">
+      <nav className="flex items-center justify-between gap-2 rounded-xl border border-ink/12 bg-[rgba(255,252,245,0.92)] px-2.5 py-2 shadow-[0_4px_22px_rgba(23,32,29,0.10),inset_0_1px_0_rgba(255,255,255,0.72)] backdrop-blur-xl sm:px-4">
+
+        {/* Logo + name */}
         <Link
           href="/"
-          aria-label="观石 Chronora 首页"
-          className="flex min-w-0 shrink items-center gap-2.5 rounded-md px-1 py-1 focus:outline-none focus:ring-2 focus:ring-jade/40"
+          aria-label="观知 Chronora 首页"
+          className="flex min-w-0 shrink items-center gap-2.5 rounded-lg px-1 py-1 transition-opacity hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-jade/40"
         >
           <Image
             src="/logo.png"
@@ -28,25 +30,26 @@ export default function SiteNav({ showRefill = true }: SiteNavProps) {
           </div>
         </Link>
 
+        {/* Action buttons */}
         <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
-          {showRefill ? (
+          {showRefill && (
             <Link
               href="/bazi"
-              className="whitespace-nowrap rounded-md border border-ink/15 bg-white/60 px-2.5 py-2 text-xs font-medium text-ink transition hover:border-jade hover:text-jade sm:px-3 sm:text-sm"
+              className="whitespace-nowrap rounded-lg border border-ink/20 bg-white/80 px-2.5 py-1.5 text-xs font-medium text-ink shadow-sm transition hover:border-jade/50 hover:text-jade sm:px-3 sm:text-sm"
             >
               <span className="sm:hidden">重填</span>
               <span className="hidden sm:inline">重新填写</span>
             </Link>
-          ) : null}
+          )}
           <Link
             href="/"
-            className="whitespace-nowrap rounded-md border border-ink/15 bg-white/60 px-2.5 py-2 text-xs font-medium text-ink transition hover:border-jade hover:text-jade sm:px-3 sm:text-sm"
+            className="whitespace-nowrap rounded-lg border border-ink/20 bg-white/80 px-2.5 py-1.5 text-xs font-medium text-ink shadow-sm transition hover:border-jade/50 hover:text-jade sm:px-3 sm:text-sm"
           >
             首页
           </Link>
           <Link
             href="/about"
-            className="whitespace-nowrap rounded-md bg-ink px-2.5 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-jade sm:px-3 sm:text-sm"
+            className="whitespace-nowrap rounded-lg bg-ink px-2.5 py-1.5 text-xs font-semibold text-white shadow-sm transition hover:bg-jade sm:px-3 sm:text-sm"
           >
             更多
           </Link>
