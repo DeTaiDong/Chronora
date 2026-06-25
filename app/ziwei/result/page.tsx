@@ -19,89 +19,84 @@ function groupAuxStars(stars: StarEntry[]) {
   };
 }
 
-function StarGroup({
-  title,
-  stars,
-  variant = "aux"
-}: {
-  title: string;
-  stars: StarEntry[];
-  variant?: "aux" | "minor";
-}) {
-  if (stars.length === 0) return null;
 
-  return (
-    <div>
-      <p className="mb-1 text-[10px] font-semibold tracking-wide text-moss/70">{title}</p>
-      <div className="flex flex-wrap gap-1">
-        {stars.map((star) => (
-          <ZiweiStarTag key={`${title}-${star.name}`} star={star} isMain={false} variant={variant} />
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// ── 单宫格 ─────────────────────────────────────────────────────────────────
+// ── 单宫格（三区固定高度布局）──────────────────────────────────────────────
 function PalaceCell({ palace, delay }: { palace: Palace; delay: number }) {
-  const groupedAuxStars = groupAuxStars(palace.auxStars);
-  const highlightClass = palace.isDestinyPalace
-    ? "border-[rgba(138,106,53,.55)] shadow-[0_0_0_4px_rgba(201,168,106,.12),0_16px_34px_rgba(86,62,30,.10)]"
-    : palace.isBodyPalace
-      ? "border-jade/45 shadow-[0_0_0_3px_rgba(111,127,79,.10)]"
-      : "border-ink/10 shadow-sm";
+  const { support, harsh, minor } = groupAuxStars(palace.auxStars);
+  const allAux = [...support, ...harsh, ...minor];
+  const isDestiny = palace.isDestinyPalace;
+  const isBody    = palace.isBodyPalace;
 
   return (
     <div
-      className={`relative flex min-h-[170px] flex-col overflow-hidden rounded-lg border-2 bg-white/68 backdrop-blur-sm opacity-0 animate-fade-up sm:min-h-[190px] ${highlightClass}`}
-      style={{ animationDelay: `${delay}ms`, borderColor: undefined }}
+      className={[
+        // ① 固定高度 → 同行所有格等高
+        "flex h-[178px] flex-col sm:h-[202px]",
+        "overflow-hidden rounded-xl opacity-0 animate-fade-up",
+        isDestiny
+          ? "palace-destiny border border-[rgba(201,168,93,0.28)] bg-[rgba(255,250,237,0.92)] shadow-[0_6px_22px_rgba(138,106,53,0.14)]"
+          : isBody
+          ? "border-2 border-jade/38 bg-[rgba(241,248,241,0.88)] shadow-sm"
+          : "border border-ink/10 bg-white/65 shadow-sm transition-[border-color,box-shadow] duration-200 hover:border-ink/20 hover:shadow-md",
+      ].join(" ")}
+      style={{ animationDelay: `${delay}ms` }}
     >
-      {/* 宫名 + 干支 */}
-      <div className="relative flex items-start justify-between border-b border-ink/8 bg-white/55 px-3 py-2.5">
-        <div>
-          <span className="text-sm font-semibold text-ink">{palace.name}</span>
-          {(palace.isDestinyPalace || palace.isBodyPalace) && (
-            <div className="mt-1 flex gap-1">
-              {palace.isDestinyPalace && (
-                <span className="rounded bg-gold/15 px-1.5 py-0.5 text-[10px] font-bold text-gold-dark">命</span>
-              )}
-              {palace.isBodyPalace && (
-                <span className="rounded bg-jade/15 px-1.5 py-0.5 text-[10px] font-bold text-jade">身</span>
-              )}
-            </div>
+      {/* 命宫内部金光晕 */}
+      {isDestiny && (
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_25%_20%,rgba(201,168,93,0.12),transparent_58%)] animate-[headerGlow_4s_ease-in-out_infinite]" />
+      )}
+
+      {/* ── 区域 1：宫名 header（固定高度）─────────────────────────────── */}
+      <div className={[
+        "relative flex shrink-0 items-center justify-between border-b px-2.5 py-[7px]",
+        isDestiny
+          ? "border-[rgba(201,168,93,0.20)] bg-gradient-to-r from-[rgba(201,168,93,0.10)] to-transparent"
+          : "border-ink/8 bg-white/32",
+      ].join(" ")}>
+        <div className="flex min-w-0 items-center gap-1">
+          <span className="truncate text-[11px] font-bold tracking-[0.04em] text-ink/80">
+            {palace.name.replace("宫", "")}
+          </span>
+          {isDestiny && (
+            <span className="shrink-0 rounded bg-[rgba(201,168,93,0.24)] px-[5px] py-px text-[9px] font-extrabold leading-none text-gold-dark">命</span>
+          )}
+          {isBody && (
+            <span className="shrink-0 rounded bg-jade/18 px-[5px] py-px text-[9px] font-extrabold leading-none text-jade">身</span>
           )}
         </div>
-        <span className="rounded bg-paper/80 px-2 py-1 text-xs font-medium text-moss">
+        <span className="shrink-0 pl-1 text-[10px] font-medium tabular-nums text-moss/48">
           {palace.stem}{palace.branch}
         </span>
       </div>
 
-      {/* 主星 */}
-      <div className="relative px-3 py-3">
-        <p className="mb-1.5 text-[10px] font-semibold tracking-wide text-gold-dark/70">
-          主星
-        </p>
-        <div className="flex min-h-8 flex-wrap gap-1.5">
-          {palace.mainStars.length > 0 ? (
-            palace.mainStars.map((star) => (
-              <ZiweiStarTag key={star.name} star={star} isMain />
-            ))
-          ) : (
-            <span className="rounded-md border border-ink/10 bg-white/65 px-2.5 py-1 text-sm text-moss/70">
-              空宫
-            </span>
-          )}
-        </div>
+      {/* ── 区域 2：主星（flex-1，内容多时自动压缩）──────────────────────── */}
+      <div className="relative flex flex-1 flex-wrap content-start items-start gap-1.5 overflow-hidden p-2.5">
+        {palace.mainStars.length > 0 ? (
+          palace.mainStars.map((star) => (
+            <ZiweiStarTag key={star.name} star={star} isMain />
+          ))
+        ) : (
+          <span className="mt-1 w-full text-center text-xs italic text-moss/30">空宫</span>
+        )}
       </div>
 
-      {/* 辅星 / 杂曜 / 神煞 */}
-      <div className="relative mt-auto space-y-2 border-t border-ink/8 bg-paper/35 px-3 py-2.5">
-        <StarGroup title="辅星" stars={groupedAuxStars.support} />
-        <StarGroup title="煞忌" stars={groupedAuxStars.harsh} />
-          <StarGroup title="杂曜 / 神煞" stars={groupedAuxStars.minor} variant="minor" />
-        {palace.auxStars.length === 0 ? (
-          <p className="text-xs text-moss/55">辅星 / 杂曜暂未见</p>
-        ) : null}
+      {/* ── 区域 3：辅星条（固定高度底部）───────────────────────────────── */}
+      <div className="relative flex min-h-[38px] shrink-0 flex-wrap items-center gap-1 overflow-hidden border-t border-ink/7 bg-[rgba(246,241,231,0.40)] px-2 py-1.5">
+        {allAux.length > 0 ? (
+          allAux.map((s) => {
+            const cat = ZIWEI_STAR_INFO[s.name]?.category;
+            return (
+              <ZiweiStarTag
+                key={s.name}
+                star={s}
+                isMain={false}
+                variant={cat === "杂曜" ? "minor" : "aux"}
+              />
+            );
+          })
+        ) : (
+          <span className="text-[10px] italic text-moss/25">—</span>
+        )}
       </div>
     </div>
   );
@@ -210,21 +205,32 @@ export default function ZiweiResultPage() {
             ))}
             {/* 行1: 丑 [中心×2] 午 */}
             <PalaceCell palace={gridPalaces[4]} delay={4 * 60 + 400} />
-            {/* 中心格（2×2）- 命盘摘要 */}
+            {/* 中心格（2×2）— 高度 = 2×cell + gap */}
             <div
-              className="col-span-2 row-span-2 flex flex-col items-center justify-center rounded-lg border border-ink/10 bg-white/82 p-5 text-center opacity-0 animate-fade-up"
+              className="col-span-2 row-span-2 flex h-[364px] flex-col items-center justify-center gap-4 rounded-xl border border-ink/10 bg-white/84 p-5 text-center opacity-0 animate-fade-up backdrop-blur-sm sm:h-[416px]"
               style={{ animationDelay: "760ms" }}
             >
-              <p className="font-zh-title text-3xl text-gold-dark sm:text-4xl">
-                {fivePhase.name}
-              </p>
-              <p className="mt-3 text-sm font-medium text-moss">
-                {lunar.yearGanZhi}年 · {chart.input.gender === "male" ? "男" : "女"}
-              </p>
-              <div className="mt-4 space-y-1.5 text-sm text-ink/65">
-                <p>命宫 {palaces[destinyPalaceIndex].stem}{palaces[destinyPalaceIndex].branch}</p>
-                <p>身宫 {palaces[chart.bodyPalaceIndex].stem}{palaces[chart.bodyPalaceIndex].branch}</p>
-                <p>起运 {fivePhase.startAge} 岁</p>
+              <div>
+                <p className="font-zh-title text-4xl text-gold-dark sm:text-5xl">
+                  {fivePhase.name}
+                </p>
+                <p className="mt-2.5 text-sm font-medium text-moss/70">
+                  {lunar.yearGanZhi}年 · {chart.input.gender === "male" ? "男" : "女"}
+                </p>
+              </div>
+
+              <div className="h-px w-12 bg-ink/12" />
+
+              <div className="space-y-2.5 text-sm">
+                <div className="flex items-center justify-center gap-2">
+                  <span className="rounded bg-gold/18 px-1.5 py-0.5 text-[10px] font-bold text-gold-dark">命</span>
+                  <span className="font-medium text-ink/72">{palaces[destinyPalaceIndex].stem}{palaces[destinyPalaceIndex].branch}</span>
+                </div>
+                <div className="flex items-center justify-center gap-2">
+                  <span className="rounded bg-jade/15 px-1.5 py-0.5 text-[10px] font-bold text-jade">身</span>
+                  <span className="font-medium text-ink/72">{palaces[chart.bodyPalaceIndex].stem}{palaces[chart.bodyPalaceIndex].branch}</span>
+                </div>
+                <p className="text-xs text-moss/55">起运 {fivePhase.startAge} 岁</p>
               </div>
             </div>
             <PalaceCell palace={gridPalaces[5]} delay={5 * 60 + 400} />
