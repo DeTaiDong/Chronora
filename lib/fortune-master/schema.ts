@@ -22,7 +22,7 @@ export const fortuneMasterJsonSchema = {
       },
       answer: {
         type: "string",
-        description: "The main answer, written in refined modern Chinese with a Bazi master's tone."
+        description: "The main answer, written in refined modern Chinese with a Bazi master's tone. For non-refusal readings, keep it around 800-1200 Chinese characters."
       },
       focusAreas: {
         type: "array",

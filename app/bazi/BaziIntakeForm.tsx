@@ -149,7 +149,12 @@ export default function BaziIntakeForm() {
   const [prefill, setPrefill] = useState<SavedPerson | null>(null);
 
   useEffect(() => {
-    setSavedPersons(loadSavedPersons());
+    const persons = loadSavedPersons();
+    const selectedId = localStorage.getItem("chronora:selectedPersonId");
+    const selected = persons.find((person) => person.id === selectedId);
+
+    setSavedPersons(persons);
+    if (selected) applyPerson(selected);
   }, []);
 
   function applyPerson(person: SavedPerson) {

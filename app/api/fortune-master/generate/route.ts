@@ -85,7 +85,8 @@ export async function POST(request: NextRequest) {
       systemInstruction: fortuneMasterSystemPrompt,
       generationConfig: {
         responseMimeType: "application/json",
-        responseSchema
+        responseSchema,
+        maxOutputTokens: 4096
       } as never
     });
 
