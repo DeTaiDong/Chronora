@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import SiteNav from "@/components/SiteNav";
+import HomeProfilePanel from "@/components/HomeProfilePanel";
 
 const featureTags = ["四柱精确排盘", "五行十神分析", "神煞分布速览", "AI 先生据盘解读"];
 
@@ -53,25 +54,50 @@ export default function Home() {
             </div>
           </div>
 
-          {/* CTA 卡片 — 延迟淡入 */}
-          <Link
-            href="/bazi"
-            className="opacity-0 animate-fade-up group flex w-full max-w-xs flex-col items-center gap-3 rounded-3xl border border-[rgba(138,106,53,0.18)] bg-[rgba(255,250,241,0.72)] px-6 py-7 shadow-[0_16px_40px_rgba(86,62,30,0.08)] backdrop-blur-[8px] transition hover:-translate-y-1 hover:bg-[rgba(255,250,241,0.88)] focus:outline-none focus:ring-2 focus:ring-gold-light/40"
+          {/* 双入口卡片 — 延迟淡入 */}
+          <div
+            className="opacity-0 animate-fade-up flex w-full max-w-xl flex-col gap-4 sm:flex-row"
             style={{ animationDelay: "570ms" }}
           >
-            <div className="grid h-14 w-14 place-items-center rounded-full border-2 border-gold/40 font-zh-title text-2xl text-gold-dark transition group-hover:border-gold group-hover:text-gold">
-              观
-            </div>
-            <div className="text-center">
-              <h2 className="text-xl font-semibold text-ink">八字命理</h2>
-              <p className="mt-1.5 text-sm font-medium text-gold">四柱排盘 / 五行十神 / 先生解读</p>
-            </div>
-            <span className="mt-1 flex items-center text-sm font-semibold text-ink/70 transition group-hover:text-gold-dark">
-              开始填写信息
-              <span className="ml-2 transition group-hover:translate-x-1">→</span>
-            </span>
-            <p className="text-xs text-moss/55">约 3 分钟 · 完全免费</p>
-          </Link>
+            {/* 八字命理 */}
+            <Link
+              href="/bazi"
+              className="group flex flex-1 flex-col items-center gap-3 rounded-3xl border border-[rgba(138,106,53,0.18)] bg-[rgba(255,250,241,0.72)] px-6 py-7 shadow-[0_16px_40px_rgba(86,62,30,0.08)] backdrop-blur-[8px] transition hover:-translate-y-1 hover:bg-[rgba(255,250,241,0.88)] focus:outline-none focus:ring-2 focus:ring-gold-light/40"
+            >
+              <div className="grid h-14 w-14 place-items-center rounded-full border-2 border-gold/40 font-zh-title text-2xl text-gold-dark transition group-hover:border-gold group-hover:text-gold">
+                观
+              </div>
+              <div className="text-center">
+                <h2 className="text-xl font-semibold text-ink">八字命理</h2>
+                <p className="mt-1.5 text-sm font-medium text-gold">四柱排盘 / 五行十神 / 先生解读</p>
+              </div>
+              <span className="mt-1 flex items-center text-sm font-semibold text-ink/70 transition group-hover:text-gold-dark">
+                开始填写信息
+                <span className="ml-2 transition group-hover:translate-x-1">→</span>
+              </span>
+              <p className="text-xs text-moss/55">约 3 分钟 · 完全免费</p>
+            </Link>
+
+            <Link
+              href="/ziwei"
+              className="group flex flex-1 flex-col items-center gap-3 rounded-3xl border border-[rgba(138,106,53,0.18)] bg-[rgba(255,250,241,0.72)] px-6 py-7 shadow-[0_16px_40px_rgba(86,62,30,0.08)] backdrop-blur-[8px] transition hover:-translate-y-1 hover:bg-[rgba(255,250,241,0.88)] focus:outline-none focus:ring-2 focus:ring-gold-light/40"
+            >
+              <div className="grid h-14 w-14 place-items-center rounded-full border-2 border-gold/40 font-zh-title text-2xl text-gold-dark transition group-hover:border-gold group-hover:text-gold">
+                紫
+              </div>
+              <div className="text-center">
+                <h2 className="text-xl font-semibold text-ink">紫微斗数</h2>
+                <p className="mt-1.5 text-sm font-medium text-gold">十二宫位 / 主星布局 / 大运流年</p>
+              </div>
+              <span className="mt-1 flex items-center text-sm font-semibold text-ink/70 transition group-hover:text-gold-dark">
+                开始排紫微盘
+                <span className="ml-2 transition group-hover:translate-x-1">→</span>
+              </span>
+              <p className="text-xs text-moss/55">农历生辰 · 时辰 · 性别</p>
+            </Link>
+          </div>
+
+          <HomeProfilePanel />
 
           {/* 页脚 — 最后浮现 */}
           <footer

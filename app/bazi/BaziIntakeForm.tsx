@@ -149,7 +149,12 @@ export default function BaziIntakeForm() {
   const [prefill, setPrefill] = useState<SavedPerson | null>(null);
 
   useEffect(() => {
-    setSavedPersons(loadSavedPersons());
+    const persons = loadSavedPersons();
+    const selectedId = localStorage.getItem("chronora:selectedPersonId");
+    const selected = persons.find((person) => person.id === selectedId);
+
+    setSavedPersons(persons);
+    if (selected) applyPerson(selected);
   }, []);
 
   function applyPerson(person: SavedPerson) {
@@ -279,7 +284,10 @@ export default function BaziIntakeForm() {
         {/* History panel */}
         {savedPersons.length > 0 && (
           <div className="mt-4 border-t border-ink/8 pt-4">
-            <p className="mb-2 text-xs font-medium text-moss">历史记录 — 点击快速填入</p>
+            <div className="mb-2 flex items-center justify-between">
+              <p className="text-xs font-medium text-moss">历史记录 — 点击快速填入</p>
+              <a href="/profile" className="text-xs font-semibold text-jade underline decoration-jade/20 underline-offset-4 hover:decoration-jade">管理档案</a>
+            </div>
             <div className="flex gap-2 overflow-x-auto pb-1">
               {savedPersons.map((person) => (
                 <div
