@@ -82,7 +82,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(parsed);
   } catch (error) {
     if (error instanceof DeepSeekRequestError) {
-      console.error("[fortune-master] DeepSeek request failed:", { status: error.status });
+      console.error("[fortune-master] DeepSeek request failed:", {
+        status: error.status, code: error.providerCode, message: error.providerMessage,
+      });
       return apiError("model_request_failed", "DeepSeek 请求失败，请检查 API Key、账户余额或模型配置。", undefined, 502);
     }
     const msg = error instanceof Error ? error.message : String(error);

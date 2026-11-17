@@ -75,3 +75,22 @@ test("surfaces provider HTTP status without exposing the key", async () => {
     globalThis.fetch = originalFetch;
   }
 });
+
+test("captures a redacted provider error for deployment diagnostics", async () => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => new Response(JSON.stringify({
+    error: { code: "invalid_request_error", message: "Invalid value for 'model': test-secret" },
+  }), { status: 400, headers: { "Content-Type": "application/json" } });
+
+  try {
+    await assert.rejects(
+      requestDeepSeekCompletion("test-secret", "system", "user"),
+      (error) => error instanceof DeepSeekRequestError &&
+        error.status === 400 &&
+        error.providerCode === "invalid_request_error" &&
+        !error.providerMessage.includes("test-secret"),
+    );
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});

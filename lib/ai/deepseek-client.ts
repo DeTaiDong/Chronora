@@ -10,11 +10,15 @@ type DeepSeekCompletion = {
 
 export class DeepSeekRequestError extends Error {
   readonly status: number;
+  readonly providerCode: string | null;
+  readonly providerMessage: string | null;
 
-  constructor(status: number) {
+  constructor(status: number, providerCode: string | null, providerMessage: string | null) {
     super(`DeepSeek API returned HTTP ${status}`);
     this.name = "DeepSeekRequestError";
     this.status = status;
+    this.providerCode = providerCode;
+    this.providerMessage = providerMessage;
   }
 }
 
@@ -45,7 +49,21 @@ export async function requestDeepSeekCompletion(
   });
 
   if (!response.ok) {
-    throw new DeepSeekRequestError(response.status);
+    let providerCode: string | null = null;
+    let providerMessage: string | null = null;
+    try {
+      const body = await response.json() as { error?: { code?: unknown; message?: unknown } };
+      if (typeof body.error?.code === "string") providerCode = body.error.code.slice(0, 80);
+      if (typeof body.error?.message === "string") {
+        providerMessage = body.error.message
+          .replaceAll(apiKey, "[redacted]")
+          .replace(/(['"`]).*?\1/g, "[quoted value]")
+          .slice(0, 200);
+      }
+    } catch {
+      // Some upstream failures do not return JSON.
+    }
+    throw new DeepSeekRequestError(response.status, providerCode, providerMessage);
   }
 
   const completion = (await response.json()) as DeepSeekCompletion;
