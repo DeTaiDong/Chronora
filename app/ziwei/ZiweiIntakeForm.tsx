@@ -20,11 +20,11 @@ const HOUR_OPTIONS = [
 ];
 
 const QUESTION_TEMPLATES = [
-  "我想看未来一年事业发展，是否适合换方向或争取更大的机会。",
-  "我想看感情关系的发展，以及自己在关系里需要注意的地方。",
-  "我想看财帛与事业之间的联动，适合稳守还是主动开拓。",
-  "我想看当前大运阶段的重点，哪些宫位主题最值得留意。",
-  "我想了解自己的性格优势、贵人助力和容易反复的课题。"
+  { label: "事业发展", value: "我想看未来一年事业发展，是否适合换方向或争取更大的机会。" },
+  { label: "感情关系", value: "我想看感情关系的发展，以及自己在关系里需要注意的地方。" },
+  { label: "财帛与事业", value: "我想看财帛与事业之间的联动，适合稳守还是主动开拓。" },
+  { label: "当前大运", value: "我想看当前大运阶段的重点，哪些宫位主题最值得留意。" },
+  { label: "性格与助力", value: "我想了解自己的性格优势、贵人助力和容易反复的课题。" }
 ];
 
 const EDUCATION_OPTIONS = ["高中/中专", "本科", "硕士", "博士", "在读", "其他"];
@@ -348,14 +348,14 @@ export default function ZiweiIntakeForm() {
           </div>
 
           <div className="mb-3 flex flex-wrap gap-2">
-            {QUESTION_TEMPLATES.map((template) => (
+            {QUESTION_TEMPLATES.map(({ label, value }) => (
               <button
-                key={template}
+                key={label}
                 type="button"
-                onClick={() => setQuestion(template)}
+                onClick={() => setQuestion(value)}
                 className="rounded-full border border-ink/12 bg-paper/70 px-3 py-1.5 text-xs font-medium text-moss transition hover:border-jade/40 hover:bg-jade/10 hover:text-jade"
               >
-                {template.slice(3, 13)}
+                {label}
               </button>
             ))}
           </div>
