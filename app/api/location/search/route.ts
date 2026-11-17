@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { searchChinaPlaces } from "@/lib/location/china-city-search";
 
 type NominatimResult = {
   place_id: number;
@@ -28,6 +29,9 @@ export async function GET(request: Request) {
   if (!query || query.length < 2) {
     return NextResponse.json({ results: [] });
   }
+
+  const localResults = searchChinaPlaces(query);
+  if (localResults.length) return NextResponse.json({ results: localResults });
 
   const url = new URL("https://nominatim.openstreetmap.org/search");
   url.searchParams.set("q", query);

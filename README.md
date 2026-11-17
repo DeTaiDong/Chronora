@@ -20,6 +20,8 @@ Chronora 是一个围绕八字排盘做的小型 WebApp。
 - Tailwind CSS
 - lunar-typescript
 
+出生地搜索对中国城市、区县使用仓库内的离线坐标数据，以便云端无法连接外部地理服务时仍可搜索。数据来自 [city-geo](https://github.com/88250/city-geo)，其许可证保存在 `data/CHINA_CITY_GEO_LICENSE`。境外地点仍依赖外部搜索服务。
+
 ## 本地运行
 
 ```bash
