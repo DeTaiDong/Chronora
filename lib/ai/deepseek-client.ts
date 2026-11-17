@@ -40,7 +40,6 @@ export async function requestDeepSeekCompletion(
         { role: "user", content: userPrompt },
       ],
       max_tokens: 8192,
-      response_format: { type: "json_object" },
       thinking: { type: "disabled" },
       safety_check: { level: "high" },
     }),

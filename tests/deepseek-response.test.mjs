@@ -49,8 +49,9 @@ test("sends a server-authenticated JSON request and returns completion metadata"
     assert.equal(requestUrl, "https://api.deepseek.com/chat/completions");
     assert.equal(requestInit.headers.Authorization, "Bearer test-secret");
     assert.equal(body.model, "deepseek-flash");
-    assert.deepEqual(body.response_format, { type: "json_object" });
+    assert.equal(body.response_format, undefined);
     assert.deepEqual(body.thinking, { type: "disabled" });
+    assert.deepEqual(body.safety_check, { level: "high" });
     assert.equal(JSON.stringify(body).includes("test-secret"), false);
     assert.deepEqual(result, {
       content: '{"ok":true}',
