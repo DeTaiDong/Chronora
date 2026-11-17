@@ -27,7 +27,14 @@ npm install
 npm run dev
 ```
 
-如需使用解读功能，需要参考 `.env.example` 配置接口密钥。
+如需使用 AI 解读，请在本地 `.env.local` 或部署平台的服务端环境变量中配置 `DEEPSEEK_API_KEY`。密钥不要写入前端代码或提交到 Git。
+
+## CloudBase 云托管部署
+
+- 项目已配置 Next.js standalone 输出和根目录 `Dockerfile`。
+- CloudBase Git 平台部署选择 `DeTaiDong/Chronora` 的 `main` 分支，开启服务端口 `3000`。
+- 服务环境变量配置 `DEEPSEEK_API_KEY`；`DEEPSEEK_MODEL` 可选，默认使用 `deepseek-flash`。
+- 推送新提交到 `main` 后，CloudBase 可按分支推送自动构建和部署。
 
 ## 说明
 

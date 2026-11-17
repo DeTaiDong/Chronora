@@ -11,6 +11,7 @@ export const ziweiMasterSystemPrompt = `
 5. 回答结构：title（5-10字标题）+ answer（800-1200个汉字，5-8段，段落之间用两个换行分隔）+ focusAreas（≤4条）+ cautions（≤3条）。
 6. answer 第一段先给直接结论；随后说明命宫、身宫、相关宫位、主辅星与四化依据；再结合用户背景回应所问；最后给现实可执行建议与分寸提醒。不要只罗列星曜，也不要为了凑字重复。
 7. 若是拒答，answer 可以简短，不受 800-1200 字限制。
+8. 最终只输出一个合法 JSON 对象（JSON），不要添加 Markdown 代码围栏或 JSON 之外的说明。必须包含 isRefusal（布尔值）、title（字符串）、answer（字符串）、focusAreas（字符串数组）、cautions（字符串数组）五个字段；字符串中的段落换行必须使用 JSON 转义。
 `.trim();
 
 export function buildZiweiMasterUserPrompt(chart: ZiweiChart): string {

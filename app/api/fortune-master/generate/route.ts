@@ -1,38 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
+import { requestDeepSeekCompletion, DeepSeekRequestError } from "@/lib/ai/deepseek-client";
+import { DeepSeekOutputError, parseDeepSeekJsonResponse } from "@/lib/ai/parse-deepseek-response";
 import { fortuneMasterSystemPrompt, buildFortuneMasterUserPrompt } from "@/lib/fortune-master/prompt";
 import { shouldStaySilent, isClearlyUnrelatedQuestion, fixedRefusalAnswer } from "@/lib/fortune-master/guard";
 import type { BaziChart } from "@/app/bazi/chartEngine";
 import type { FortuneMasterResponse } from "@/lib/fortune-master";
-
-const responseSchema = {
-  type: SchemaType.OBJECT,
-  properties: {
-    isRefusal: {
-      type: SchemaType.BOOLEAN,
-      description: "Whether the answer refuses an unrelated or unsupported request."
-    },
-    title: {
-      type: SchemaType.STRING,
-      description: "A short classical Chinese-style title for the reading."
-    },
-    answer: {
-      type: SchemaType.STRING,
-      description: "The main answer, written in plain modern Chinese."
-    },
-    focusAreas: {
-      type: SchemaType.ARRAY,
-      items: { type: SchemaType.STRING },
-      description: "Three to five concise points the user should pay attention to."
-    },
-    cautions: {
-      type: SchemaType.ARRAY,
-      items: { type: SchemaType.STRING },
-      description: "Practical cautions, avoiding deterministic claims."
-    }
-  },
-  required: ["isRefusal", "title", "answer", "focusAreas", "cautions"]
-};
 
 function apiError(code: string, message: string, detail?: string, status = 500) {
   return NextResponse.json({ error: { code, message, detail } }, { status });
@@ -46,8 +18,8 @@ function isFortuneMasterResponse(value: unknown): value is FortuneMasterResponse
     typeof item.isRefusal === "boolean" &&
     typeof item.title === "string" &&
     typeof item.answer === "string" &&
-    Array.isArray(item.focusAreas) &&
-    Array.isArray(item.cautions)
+    Array.isArray(item.focusAreas) && item.focusAreas.every((area) => typeof area === "string") &&
+    Array.isArray(item.cautions) && item.cautions.every((caution) => typeof caution === "string")
   );
 }
 
@@ -73,33 +45,33 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(fixedRefusalAnswer());
   }
 
-  const apiKey = process.env.GEMINI_API_KEY?.trim();
+  const apiKey = process.env.DEEPSEEK_API_KEY?.trim();
   if (!apiKey) {
-    return apiError("missing_api_key", "未配置 GEMINI_API_KEY，请在 .env.local 中补充后重启开发服务器。");
+    return apiError("missing_api_key", "未配置 DEEPSEEK_API_KEY，请在服务端环境变量中设置后重试。");
   }
 
   try {
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({
-      model: process.env.GEMINI_MODEL?.trim() || "gemini-2.5-flash",
-      systemInstruction: fortuneMasterSystemPrompt,
-      generationConfig: {
-        responseMimeType: "application/json",
-        responseSchema,
-        maxOutputTokens: 4096
-      } as never
-    });
-
-    const result = await model.generateContent(buildFortuneMasterUserPrompt(chart));
-    const content = result.response.text();
+    const result = await requestDeepSeekCompletion(
+      apiKey,
+      fortuneMasterSystemPrompt,
+      buildFortuneMasterUserPrompt(chart),
+    );
     let parsed: unknown;
 
     try {
-      parsed = JSON.parse(content);
+      parsed = parseDeepSeekJsonResponse(result.content, result.finishReason);
     } catch (error) {
-      const detail = error instanceof Error ? error.message : String(error);
-      console.error("[fortune-master] invalid json:", detail, content);
-      return apiError("invalid_model_json", "模型返回的 JSON 格式不正确，请重新生成一次。", detail);
+      const outputError = error instanceof DeepSeekOutputError ? error : null;
+      console.error("[fortune-master] invalid model output:", {
+        code: outputError?.code ?? "unknown",
+        finishReason: result.finishReason,
+        responseChars: result.content?.length ?? 0,
+        usage: result.usage,
+      });
+      const message = outputError?.code === "truncated"
+        ? "AI 解读内容未完整生成，请重新尝试。"
+        : "AI 返回内容格式不完整，请重新尝试解读。";
+      return apiError("invalid_model_json", message, undefined, 502);
     }
 
     if (!isFortuneMasterResponse(parsed)) {
@@ -109,8 +81,12 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(parsed);
   } catch (error) {
+    if (error instanceof DeepSeekRequestError) {
+      console.error("[fortune-master] DeepSeek request failed:", { status: error.status });
+      return apiError("model_request_failed", "DeepSeek 请求失败，请检查 API Key、账户余额或模型配置。", undefined, 502);
+    }
     const msg = error instanceof Error ? error.message : String(error);
     console.error("[fortune-master] generate error:", msg);
-    return apiError("model_request_failed", "AI 解读服务请求失败，请检查网络、额度或模型配置。", msg);
+    return apiError("model_request_failed", "DeepSeek 解读服务请求失败，请稍后重试。", undefined, 502);
   }
 }
