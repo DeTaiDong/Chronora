@@ -189,7 +189,7 @@ export default function ZiweiResultPage() {
                 className="inline-flex items-center gap-2 rounded-lg border border-[#c9a85d]/40 bg-[#c9a85d]/15 px-5 py-2.5 text-sm font-semibold text-[#c9a85d] transition hover:bg-[#c9a85d]/25 opacity-0 animate-fade-up"
                 style={{ animationDelay: "360ms" }}
               >
-                请 AI 细看 →
+                AI 解读 →
               </Link>
             )}
           </div>
@@ -269,7 +269,7 @@ export default function ZiweiResultPage() {
         {canAskMaster && (
           <div className="mt-5 rounded-lg bg-[linear-gradient(135deg,#1a1611,#2d261b)] px-6 py-6 text-center shadow-lg">
             <p className="text-sm font-semibold text-[#c9a85d]">AI 命盘解读</p>
-            <p className="mt-1 text-lg font-semibold text-white">命盘已排，可请 AI 据盘细解</p>
+            <p className="mt-1 text-lg font-semibold text-white">命盘已排，可使用 AI 据盘解读</p>
             <Link
               href="/ziwei/master"
               className="mt-4 inline-flex items-center gap-2 rounded-lg bg-[#c9a85d] px-6 py-2.5 text-sm font-bold text-[#1a1611] transition hover:bg-[#d4b86a]"
