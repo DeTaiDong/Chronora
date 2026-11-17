@@ -196,14 +196,18 @@ export default function BaziIntakeForm() {
 
     try {
       const response = await fetch(`/api/location/search?q=${encodeURIComponent(query)}`);
-      const data = (await response.json()) as { results?: LocationResult[]; error?: string };
+      const data = (await response.json().catch(() => null)) as
+        | { results?: LocationResult[]; error?: string }
+        | null;
 
-      if (!response.ok || data.error) throw new Error(data.error || "地点搜索失败。");
+      if (!response.ok || !data || data.error) {
+        throw new Error(data?.error || "地点搜索暂时不可用，请稍后重试。");
+      }
 
       setLocationResults(data.results ?? []);
       if (!data.results?.length) setLocationError("没有找到匹配地点，请尝试输入城市、区县或英文地址。");
     } catch (error) {
-      setLocationError(error instanceof Error ? error.message : "地点搜索失败。");
+      setLocationError(error instanceof Error ? error.message : "地点搜索暂时不可用，请稍后重试。");
     } finally {
       setSearching(false);
     }

@@ -396,8 +396,10 @@ export default function ProfilePage() {
     setLocSrch(true); setLocErr("");
     try {
       const res = await fetch(`/api/location/search?q=${encodeURIComponent(q)}`);
-      const data = await res.json();
-      if (!res.ok || data.error) throw new Error(data.error ?? "搜索失败");
+      const data = (await res.json().catch(() => null)) as
+        | { results?: LocationResult[]; error?: string }
+        | null;
+      if (!res.ok || !data || data.error) throw new Error(data?.error ?? "地点搜索暂时不可用，请稍后重试。");
       setLocResults(data.results ?? []);
       if (!data.results?.length) setLocErr("未找到匹配地点，请换个关键词。");
     } catch (e) { setLocErr(e instanceof Error ? e.message : "搜索失败，请重试。"); }

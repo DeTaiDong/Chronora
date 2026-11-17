@@ -36,21 +36,21 @@ export async function GET(request: Request) {
   url.searchParams.set("limit", "6");
   url.searchParams.set("accept-language", "zh-CN,en");
 
-  const response = await fetch(url, {
-    headers: {
-      "User-Agent": "Chronora-Bazi/0.1 contact: local-dev",
-      Referer: "https://chronora.local"
-    },
-    next: {
-      revalidate: 60 * 60 * 24
-    }
-  });
-
-  if (!response.ok) {
+  let data: NominatimResult[];
+  try {
+    const response = await fetch(url, {
+      headers: { "User-Agent": "Chronora-Bazi/0.1" },
+      next: { revalidate: 60 * 60 * 24 },
+      signal: AbortSignal.timeout(10_000),
+    });
+    if (!response.ok) throw new Error(`Nominatim HTTP ${response.status}`);
+    const body: unknown = await response.json();
+    if (!Array.isArray(body)) throw new Error("Nominatim returned an invalid response");
+    data = body as NominatimResult[];
+  } catch (error) {
+    console.error("[location-search] upstream failed:", error instanceof Error ? error.message : String(error));
     return NextResponse.json({ error: "地点搜索服务暂时不可用，请稍后再试。" }, { status: 502 });
   }
-
-  const data = (await response.json()) as NominatimResult[];
   const results = data.map((item) => {
     const address = item.address ?? {};
 
