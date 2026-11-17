@@ -7,13 +7,13 @@ const featureTags = [
   "秒出四柱命盘",
   "五行旺衰速览",
   "神煞分布可视化",
-  "AI 先生据盘细解",
+  "AI 据盘细解",
 ];
 
 const HOW_IT_WORKS = [
   { num: "①", title: "填写生辰", sub: "公历日期 · 出生时辰 · 性别" },
   { num: "②", title: "生成命盘", sub: "四柱 / 紫微十二宫自动推算" },
-  { num: "③", title: "先生解读", sub: "结合所问，给出针对性分析" },
+  { num: "③", title: "AI 解读", sub: "结合所问，给出针对性分析" },
 ];
 
 export default function Home() {
@@ -46,7 +46,7 @@ export default function Home() {
                 <span className="block text-jade">以术数照见人生纹理。</span>
               </h1>
               <p className="mt-5 text-base leading-7 text-moss">
-                输入生辰，AI 先生为你生成八字命盘或紫微斗数并据盘解读。
+                输入生辰，AI 为你生成八字命盘或紫微斗数并据盘解读。
               </p>
               <p className="mt-2 text-sm text-moss/55">
                 出生时间 · 四柱推算 · 五行格局 · 十神神煞 · 针对性解读

@@ -559,9 +559,9 @@ export default function BaziResultPage() {
             <div className="animate-header-glow pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_80%_30%,rgba(47,125,109,0.18),transparent_50%)]" />
             <div className="relative flex items-center justify-between gap-6">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-widest text-[#c9a85d]/80">观命先生</p>
+                <p className="text-xs font-semibold uppercase tracking-widest text-[#c9a85d]/80">AI 命盘解读</p>
                 <h2 className="mt-1 text-xl font-semibold text-white">
-                  {canAskMaster ? "请先生据盘细看" : "补充问诊主题后再细看"}
+                  {canAskMaster ? "请 AI 据盘细看" : "补充问诊主题后再细看"}
                 </h2>
                 <p className="mt-2 max-w-lg text-sm leading-6 text-white/50">
                   {canAskMaster
@@ -573,7 +573,7 @@ export default function BaziResultPage() {
                 href={canAskMaster ? "/bazi/master" : "/bazi"}
                 className="shrink-0 inline-flex items-center gap-2 rounded-lg bg-[#c9a85d] px-6 py-3 text-sm font-semibold text-[#1a1611] transition hover:bg-[#e0bc7a] focus:outline-none focus:ring-2 focus:ring-[#c9a85d]/40"
               >
-                {canAskMaster ? "请先生解盘" : "返回补充问题"}
+                {canAskMaster ? "AI 解盘" : "返回补充问题"}
                 <span>→</span>
               </Link>
             </div>
@@ -587,7 +587,7 @@ export default function BaziResultPage() {
           href={canAskMaster ? "/bazi/master" : "/bazi"}
           className="flex items-center justify-center gap-2 rounded-xl bg-ink py-3.5 text-sm font-semibold text-white transition hover:bg-jade active:scale-[0.98]"
         >
-          {canAskMaster ? "观命先生据盘细解" : "返回补充问诊信息"}
+          {canAskMaster ? "AI 据盘细解" : "返回补充问诊信息"}
           <span>→</span>
         </Link>
       </div>

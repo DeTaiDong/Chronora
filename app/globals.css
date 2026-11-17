@@ -75,6 +75,26 @@ button {
   to   { opacity: 1; transform: scale(1); }
 }
 
+/* ── 导航栏卦印徽标（朱文印·不规则刻边） ──────────────────────────────── */
+.seal-badge {
+  border-radius: 5px;
+  clip-path: polygon(
+    5% 2%, 38% 0%, 70% 1%, 96% 4%,
+    100% 30%, 99% 62%, 100% 90%, 94% 99%,
+    62% 100%, 30% 98%, 3% 100%, 0% 70%,
+    2% 40%, 1% 12%
+  );
+}
+
+.seal-badge::before {
+  content: '';
+  position: absolute;
+  inset: 2px;
+  border: 1px solid rgba(255, 255, 255, 0.32);
+  border-radius: 3px;
+  pointer-events: none;
+}
+
 /* ── 命宫旋转金边（@property conic-gradient 技术） ────────────────────── */
 @property --border-angle {
   syntax: '<angle>';

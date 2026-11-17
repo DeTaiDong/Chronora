@@ -69,7 +69,7 @@ function ReadingBox({ reading }: { reading: FortuneMasterResponse | null }) {
   if (!reading) {
     return (
       <section className="opacity-0 animate-fade-up rounded-lg border border-ink/10 bg-white/80 p-6 shadow-sm">
-        <p className="text-xs font-semibold uppercase tracking-widest text-ember">先生未开口</p>
+        <p className="text-xs font-semibold uppercase tracking-widest text-ember">AI 尚未生成解读</p>
         <p className="mt-3 text-sm leading-7 text-moss">
           用户未留下明确问题，依照规则不作空泛推断。
         </p>
@@ -81,7 +81,7 @@ function ReadingBox({ reading }: { reading: FortuneMasterResponse | null }) {
     <section className="opacity-0 animate-fade-up rounded-lg border border-ink/10 bg-white/85 shadow-sm">
       <div className="border-b border-ink/10 px-5 py-4 sm:px-6">
         <p className="text-xs font-semibold uppercase tracking-widest text-ember">
-          {reading.isRefusal ? "不入命盘" : "先生批语"}
+          {reading.isRefusal ? "不入命盘" : "AI 解读"}
         </p>
         <h2 className="mt-1 text-2xl font-semibold text-ink">{reading.title}</h2>
       </div>
@@ -226,7 +226,7 @@ export default function BaziMasterPage() {
         <section className="max-w-md rounded-lg border border-ink/10 bg-white/85 p-8 text-center shadow-sm">
           <h1 className="text-2xl font-semibold">{missing ? "暂无问诊资料" : "没有找到命盘"}</h1>
           <p className="mt-3 leading-7 text-moss">
-            {missing ? "请先在排盘页填写问题或辅助信息，再请先生细看。" : "请先完成八字排盘，再进入先生解读。"}
+            {missing ? "请先在排盘页填写问题或辅助信息，再让 AI 细看。" : "请先完成八字排盘，再进入 AI 解读。"}
           </p>
           <Link
             href="/bazi"
@@ -259,7 +259,7 @@ export default function BaziMasterPage() {
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_30%_0%,rgba(201,168,93,0.22),transparent_60%)] animate-header-glow" />
 
           <p className="relative text-xs font-semibold uppercase tracking-widest text-[#c9a85d] opacity-0 animate-ink-reveal">
-            观命先生
+            AI 命盘解读
           </p>
           <div className="relative mt-3 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
             <div>
@@ -334,7 +334,7 @@ export default function BaziMasterPage() {
         <div className="mt-5">
           {loading ? (
             <section className="opacity-0 animate-fade-up rounded-lg border border-ink/10 bg-white/80 p-8 shadow-sm text-center">
-              <p className="text-sm text-moss animate-pulse">先生正在推演，稍候片刻……</p>
+              <p className="text-sm text-moss animate-pulse">AI 正在推演，稍候片刻……</p>
             </section>
           ) : apiError ? (
             <section className="opacity-0 animate-fade-up rounded-lg border border-ink/10 bg-white/80 p-8 shadow-sm text-center">

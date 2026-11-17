@@ -25,7 +25,7 @@ export default function BaziPage() {
               className="mt-5 text-base leading-8 text-moss opacity-0 animate-fade-up"
               style={{ animationDelay: "300ms" }}
             >
-              必要信息用于排盘，辅助信息用于让后续解读更贴近真实处境。当前会先生成结构化命盘结果页，之后再进入先生解读。
+              必要信息用于排盘，辅助信息用于让后续解读更贴近真实处境。当前会先生成结构化命盘结果页，之后再进入 AI 解读。
             </p>
           </aside>
 
