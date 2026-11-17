@@ -341,7 +341,7 @@ export default function ZiweiIntakeForm() {
         <section className="rounded-lg border border-ink/10 bg-white/65 p-4 md:p-5">
           <div className="mb-5">
             <p className="text-sm font-semibold text-jade">问诊主题</p>
-            <h3 className="mt-1 text-2xl font-semibold">你想请先生看的事</h3>
+            <h3 className="mt-1 text-2xl font-semibold">你想让 AI 解读的事</h3>
             <p className="mt-2 text-sm leading-6 text-moss">
               这项会直接影响 AI 解读方向。可先点模板，再改成自己的问题。
             </p>
@@ -482,7 +482,7 @@ export default function ZiweiIntakeForm() {
       ) : null}
 
       <div className="flex flex-col gap-3 border-t border-ink/10 bg-white/75 px-5 py-4 md:flex-row md:items-center md:justify-between md:px-7">
-        <p className="text-sm leading-6 text-moss">生成后会进入紫微十二宫命盘页，可继续请先生解读。</p>
+        <p className="text-sm leading-6 text-moss">生成后会进入紫微十二宫命盘页，可继续使用 AI 解读。</p>
         <button
           type="submit"
           disabled={loading}

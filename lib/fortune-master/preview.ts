@@ -49,7 +49,7 @@ export function generatePreviewFortuneReading(chart: BaziChart): FortuneMasterRe
     answer: [
       `此盘日主为${chart.dayMaster}，四柱排作：${pillarLine(chart)}。你所问“${question}”，宜先看日主所承之势，再参以月令、十神与五行消长。`,
       `盘面五行以${strongest}气较显，${weakest}气较薄，故行事易有一端偏重、一端不足之象。若问事业与取舍，宜取稳中求进，先补短处，再借强处发力；若问感情，则不宜只凭一时情绪定局，需看现实承托与长期相处。`,
-      `${secondary ? `你补充说${secondary}，这比单看命盘更贴近眼前处境。` : "补充资料未详，先生只能从盘面取象，不妄加经历。"}月柱为${monthColumn.heavenlyStem.value}${monthColumn.earthlyBranch.value}，日柱为${dayColumn.heavenlyStem.value}${dayColumn.earthlyBranch.value}，一主外缘时势，一主自身根气，二者相参，说明此事不可急断，须看时机、资源与自身定力。${starLine}`,
+      `${secondary ? `你补充说${secondary}，这比单看命盘更贴近眼前处境。` : "补充资料未详，AI 仅从盘面取象，不妄加经历。"}月柱为${monthColumn.heavenlyStem.value}${monthColumn.earthlyBranch.value}，日柱为${dayColumn.heavenlyStem.value}${dayColumn.earthlyBranch.value}，一主外缘时势，一主自身根气，二者相参，说明此事不可急断，须看时机、资源与自身定力。${starLine}`,
       "总的看，此问宜以“先定心，后定路”为纲：能准备者先准备，能沟通者先沟通，能验证者先小步验证。命盘只示趋向，不替人作孤注一掷之决断。"
     ].join("\n\n"),
     focusAreas: [
