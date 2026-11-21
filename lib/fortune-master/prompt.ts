@@ -31,16 +31,19 @@ function formatChart(chart: BaziChart) {
 
   return [
     `日主: ${chart.dayMaster}`,
+    `换日规则: ${chart.input.dayBoundary === "zi" ? "23:00 子初换日" : "00:00 换日"}`,
     `四柱:\n${pillars}`,
     `五行分布: ${Object.entries(chart.fiveElements)
       .map(([element, count]) => `${element}${count}`)
       .join("、")}`,
+    `时辰不详的候选柱: ${chart.uncertainPillars ? Object.entries(chart.uncertainPillars).map(([label, choices]) => `${label}${choices.join("/")}`).join("、") : "无"}`,
+    `时间临界提示: ${chart.warnings?.join("；") || "无"}`,
     `出现次数最多的五行: ${chart.summary.strongestElement}（不代表旺衰）`,
     `出现次数最少的五行: ${chart.summary.weakestElement}（不代表旺衰）`,
     `真太阳时: ${chart.input.birthTimeUnknown ? "时辰不详，无法确定" : `${compact(chart.input.adjustedBirthDate)} ${compact(chart.input.adjustedBirthTime)}`}`,
     `胎元: ${compact(chart.input.taiYuan)} ${compact(chart.input.taiYuanNaYin)}`,
-    `命宫: ${compact(chart.input.mingGong)} ${compact(chart.input.mingGongNaYin)}`,
-    `身宫: ${compact(chart.input.shenGong)} ${compact(chart.input.shenGongNaYin)}`
+    `命宫: ${chart.input.mingGong ? `${chart.input.mingGong} ${compact(chart.input.mingGongNaYin)}` : "时间口径或时辰不足，待核"}`,
+    `身宫: ${chart.input.shenGong ? `${chart.input.shenGong} ${compact(chart.input.shenGongNaYin)}` : "时间口径或时辰不足，待核"}`
   ].join("\n");
 }
 
@@ -80,6 +83,7 @@ export const fortuneMasterSystemPrompt = `
 - 不可声称命运必然发生，不可制造恐惧，不可要求用户购买法事、改运物、课程或私下咨询。
 - 五行数字只是干支与藏干的出现次数，不得据此直接断定日主旺衰、喜用神或缺某五行。
 - 时辰不详时，不得推断时柱、依赖时柱的宫位或准确太阳时；临近换日、节气的日月柱也应说明不确定性。
+- 若候选日柱不止一个，参考盘的日主、十神和五行不能用于确定性解读，应先说明需要核实出生时辰。
 - 健康、法律、投资相关内容只能给一般性提醒，必须建议用户寻求专业人士。
 - 你是一个中国传统命理师，不能提供医疗、法律、投资等专业建议。其次，你不提供任何心理咨询、情绪疏导、人生规划等服务。你只提供八字命理相关的分析与建议。
 - 你是一个中国人，坚持一个中国原则！（非常重要）

@@ -22,6 +22,7 @@ type SavedPerson = {
   birthDate: string;
   birthTime: string;
   birthTimeUnknown: boolean;
+  dayBoundary?: "midnight" | "zi";
   location: LocationResult;
   locationQuery: string;
   birthPlaceDetail: string;
@@ -226,10 +227,12 @@ export default function BaziIntakeForm() {
     }
 
     const form = new FormData(event.currentTarget);
+    const dayBoundary: "midnight" | "zi" = form.get("dayBoundary") === "zi" ? "zi" : "midnight";
     const payload = {
       birthDate: String(form.get("birthDate") || ""),
       birthTime: birthTimeUnknown ? "" : String(form.get("birthTime") || ""),
       birthTimeUnknown,
+      dayBoundary,
       birthCountryCode: selectedLocation.countryCode,
       birthCountry: selectedLocation.country,
       birthState: selectedLocation.state,
@@ -254,6 +257,7 @@ export default function BaziIntakeForm() {
       birthDate: payload.birthDate,
       birthTime: payload.birthTime,
       birthTimeUnknown,
+      dayBoundary: payload.dayBoundary,
       location: selectedLocation,
       locationQuery,
       birthPlaceDetail: payload.birthPlaceDetail,
@@ -378,6 +382,14 @@ export default function BaziIntakeForm() {
                 不确定具体出生时间
               </label>
             </div>
+
+            <label className="block text-sm font-medium md:col-span-2">
+              晚子时换日口径
+              <select name="dayBoundary" defaultValue={prefill?.dayBoundary ?? "midnight"} className={fieldClass}>
+                <option value="midnight">00:00 换日（晚子时仍属当天）</option>
+                <option value="zi">23:00 换日（子初即属次日）</option>
+              </select>
+            </label>
 
             <div className="md:col-span-2">
               <label className="block text-sm font-medium">

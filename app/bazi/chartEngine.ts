@@ -1,10 +1,11 @@
-import { Solar } from "lunar-typescript";
+import { LunarUtil, Solar } from "lunar-typescript";
 import { Temporal } from "temporal-polyfill";
 
 export type BaziInput = {
   birthDate?: string;
   birthTime?: string;
   birthTimeUnknown?: boolean;
+  dayBoundary?: "midnight" | "zi";
   birthCountry?: string;
   birthCountryCode?: string;
   birthState?: string;
@@ -69,6 +70,8 @@ export type BaziChart = {
     weakestElement: string;
     note: string;
   };
+  uncertainPillars?: Record<string, string[]>;
+  warnings?: string[];
 };
 
 const elementEmoji: Record<string, string> = {
@@ -158,6 +161,71 @@ function formatTime(date: Date) {
   return `${String(date.getUTCHours()).padStart(2, "0")}:${String(date.getUTCMinutes()).padStart(2, "0")}`;
 }
 
+function fromUtcClock(date: Date) {
+  return Solar.fromYmdHms(
+    date.getUTCFullYear(), date.getUTCMonth() + 1, date.getUTCDate(),
+    date.getUTCHours(), date.getUTCMinutes(), date.getUTCSeconds()
+  ).getLunar().getEightChar();
+}
+
+function buildPillars(input: BaziInput) {
+  const birth = parseDateTime(input);
+  const solarTime = trueSolarDate(birth, input.birthLongitude);
+  const solarClock = solarTime.date;
+  const beijingClock = new Date(birth.epochMilliseconds + 8 * 60 * 60_000);
+  const calendar = fromUtcClock(beijingClock);
+  const local = fromUtcClock(solarClock);
+  calendar.setSect(input.dayBoundary === "zi" ? 1 : 2);
+  local.setSect(input.dayBoundary === "zi" ? 1 : 2);
+  const dayStem = local.getDayGan();
+
+  const pillarData = [
+    { label: "年柱", value: calendar.getYear(), voidBranches: calendar.getYearXunKong() },
+    { label: "月柱", value: calendar.getMonth(), voidBranches: calendar.getMonthXunKong() },
+    { label: "日柱", value: local.getDay(), voidBranches: local.getDayXunKong() },
+    { label: "时柱", value: local.getTime(), voidBranches: local.getTimeXunKong() }
+  ];
+  const year = splitPillar(pillarData[0].value);
+  const month = splitPillar(pillarData[1].value);
+  const day = splitPillar(pillarData[2].value);
+
+  const columns = pillarData.slice(0, input.birthTimeUnknown ? 3 : 4).map((pillar, index): ChartColumn => {
+    const split = splitPillar(pillar.value);
+    const hidden = LunarUtil.ZHI_HIDE_GAN[split.branch] ?? hiddenStems[split.branch] ?? [];
+    return {
+      label: pillar.label,
+      mainStar: index === 2 ? dayMasterLabel(input.gender) : LunarUtil.SHI_SHEN[dayStem + split.stem] ?? "",
+      heavenlyStem: {
+        value: split.stem,
+        element: stemElements[split.stem] ?? "",
+        emoji: elementEmoji[stemElements[split.stem]] ?? ""
+      },
+      earthlyBranch: {
+        value: split.branch,
+        element: stemElements[hidden[0]] ?? "",
+        emoji: elementEmoji[stemElements[hidden[0]]] ?? ""
+      },
+      hiddenStems: hidden.map((stem) => ({
+        stem,
+        element: stemElements[stem] ?? "",
+        tenGod: LunarUtil.SHI_SHEN[dayStem + stem] ?? ""
+      })),
+      minorStars: hidden.map((stem) => LunarUtil.SHI_SHEN[dayStem + stem] ?? ""),
+      lifeStage: local.getDiShi(branches.indexOf(split.branch as Branch)),
+      selfSeat: local.getDiShi(branches.indexOf(split.branch as Branch)),
+      voidBranches: pillar.voidBranches,
+      nayin: LunarUtil.NAYIN[pillar.value] ?? "",
+      symbolicStars: symbolicStars({
+        dayStem: day.stem, yearStem: year.stem, dayBranch: day.branch,
+        yearBranch: year.branch, monthBranch: month.branch,
+        branch: split.branch, pillar: pillar.value, pillarIndex: index
+      })
+    };
+  });
+
+  return { birth, solarTime, calendar, local, columns, dayStem };
+}
+
 function splitPillar(pillar: string) {
   return {
     stem: pillar.slice(0, 1),
@@ -213,10 +281,7 @@ function groupStar(group: string, star: "桃花" | "驿马" | "华盖" | "将星
  *   将星/驿马/亡神/劫煞/灾煞 — 年支三合组
  *   咸池(桃花)/华盖          — 日支三合组（《神峰通考》）
  *   飞刃                     — 羊刃对冲支，日干起
- *   血刃                     — 《三命通会》单干表（壬→未，非配对法）
- *   德秀贵人                 — 月支三合组决定德/秀天干，对当前柱天干判断
  *   天医                     — 月支前一位
- *   童子煞                   — 年支三合组（各家分歧较大，仍有偏差）
  *   月德                     — 月支三合组对应天干，与当前柱天干比较
  *   九丑日                   — 固定日柱列表（壬子壬午癸丑癸未庚辰庚戌辛巳辛亥）
  */
@@ -281,32 +346,6 @@ function symbolicStars(context: {
     庚: ["寅", "亥"], 辛: ["寅", "亥"],
     壬: ["巳", "申"], 癸: ["巳", "申"]
   };
-  // 血刃: 三命通会 单干查法
-  const xueRenByDayStem: Record<string, string> = {
-    甲: "丑", 乙: "子", 丙: "亥", 丁: "酉",
-    戊: "午", 己: "卯", 庚: "寅", 辛: "午",
-    壬: "未", 癸: "亥"
-  };
-  // 飞刃: 羊刃的对冲支 by day stem
-  const feiRenByDayStem: Record<string, string> = {
-    甲: "酉", 乙: "戌", 丙: "子", 丁: "丑",
-    戊: "子", 己: "丑", 庚: "卯", 辛: "辰",
-    壬: "午", 癸: "未"
-  };
-  // 德秀贵人: 月支三合组决定哪些天干为德/秀，对当前柱天干判断
-  const dexiuStemsByMonthGroup: Record<string, string[]> = {
-    亥卯未: ["甲", "乙", "丁", "壬"],
-    寅午戌: ["丙", "丁", "戊", "癸"],
-    申子辰: ["壬", "癸", "戊", "己"],
-    巳酉丑: ["庚", "辛", "乙"]
-  };
-  // 童子煞: 年支三合组决定哪些地支为童子
-  const tongZiBranchesByYearGroup: Record<string, string[]> = {
-    申子辰: ["亥", "子"],
-    巳酉丑: ["申", "酉"],
-    寅午戌: ["巳", "午"],
-    亥卯未: ["寅", "卯"]
-  };
   // 九丑日: 特定日柱
   const jiuChouDays = new Set(["壬子", "壬午", "癸丑", "癸未", "庚辰", "庚戌", "辛巳", "辛亥"]);
 
@@ -342,14 +381,8 @@ function symbolicStars(context: {
   // 咸池/华盖: 日支三合组
   if (groupStar(dayGroup, "桃花") === branch) stars.push("咸池");
   if (groupStar(dayGroup, "华盖") === branch) stars.push("华盖");
-  if (feiRenByDayStem[dayStem] === branch) stars.push("飞刃");
-  if (xueRenByDayStem[dayStem] === branch) stars.push("血刃");
-  // 德秀: 月支组 → 当前柱天干
-  if ((dexiuStemsByMonthGroup[monthGroup] ?? []).includes(currentStem)) stars.push("德秀贵人");
   if (tianYiBranch === branch) stars.push("天医");
-  if ((tongZiBranchesByYearGroup[yearGroup] ?? []).includes(branch)) stars.push("童子煞");
   if (yueDeStem === currentStem) stars.push("月德");
-  if (branch === "寅" || branch === "申") stars.push("词馆");
   if (pillarIndex === 2 && jiuChouDays.has(pillar)) stars.push("九丑日");
   if (
     pillarIndex === 2 &&
@@ -384,106 +417,53 @@ export function createBaziChart(input: BaziInput): BaziChart {
     throw new Error("目前八字排盘仅支持中国大陆出生地点，请重新选择。");
   }
 
-  const rawDate = parseDateTime(input);
-  const solarTime = trueSolarDate(rawDate, input.birthLongitude);
+  const { birth, solarTime, calendar, local, columns, dayStem } = buildPillars(input);
   const date = solarTime.date;
-  const solar = Solar.fromYmdHms(
-    date.getUTCFullYear(),
-    date.getUTCMonth() + 1,
-    date.getUTCDate(),
-    date.getUTCHours(),
-    date.getUTCMinutes(),
-    0
-  );
-  const lunar = solar.getLunar();
-  const eightChar = lunar.getEightChar();
-
-  const pillars = [
-    {
-      label: "年柱",
-      value: eightChar.getYear(),
-      mainStar: eightChar.getYearShiShenGan(),
-      hiddenGan: eightChar.getYearHideGan(),
-      hiddenGods: eightChar.getYearShiShenZhi(),
-      lifeStage: eightChar.getYearDiShi(),
-      xunKong: eightChar.getYearXunKong(),
-      nayin: eightChar.getYearNaYin()
-    },
-    {
-      label: "月柱",
-      value: eightChar.getMonth(),
-      mainStar: eightChar.getMonthShiShenGan(),
-      hiddenGan: eightChar.getMonthHideGan(),
-      hiddenGods: eightChar.getMonthShiShenZhi(),
-      lifeStage: eightChar.getMonthDiShi(),
-      xunKong: eightChar.getMonthXunKong(),
-      nayin: eightChar.getMonthNaYin()
-    },
-    {
-      label: "日柱",
-      value: eightChar.getDay(),
-      mainStar: dayMasterLabel(input.gender),
-      hiddenGan: eightChar.getDayHideGan(),
-      hiddenGods: eightChar.getDayShiShenZhi(),
-      lifeStage: eightChar.getDayDiShi(),
-      xunKong: eightChar.getDayXunKong(),
-      nayin: eightChar.getDayNaYin()
-    },
-    {
-      label: "时柱",
-      value: eightChar.getTime(),
-      mainStar: eightChar.getTimeShiShenGan(),
-      hiddenGan: eightChar.getTimeHideGan(),
-      hiddenGods: eightChar.getTimeShiShenZhi(),
-      lifeStage: eightChar.getTimeDiShi(),
-      xunKong: eightChar.getTimeXunKong(),
-      nayin: eightChar.getTimeNaYin()
+  const warnings: string[] = [];
+  if (!input.birthTimeUnknown) {
+    const lunar = calendar.getLunar();
+    const jieTimes = [lunar.getPrevJie(), lunar.getNextJie()];
+    const closeJie = jieTimes.find((jie) => {
+      const instant = Date.parse(jie.getSolar().toYmdHms().replace(" ", "T") + "+08:00");
+      return Math.abs(birth.epochMilliseconds - instant) <= 30 * 60_000;
+    });
+    if (closeJie) warnings.push(`出生时刻距离${closeJie.getName()}交节不超过30分钟，请核对出生记录的分钟数。`);
+    const minuteOfDay = date.getUTCHours() * 60 + date.getUTCMinutes();
+    const fromHourBoundary = ((minuteOfDay - 60) % 120 + 120) % 120;
+    if (Math.min(fromHourBoundary, 120 - fromHourBoundary) <= 15) {
+      warnings.push("太阳时距离时辰交界不超过15分钟，经度或出生时间误差可能改变时柱。");
     }
-  ];
-
-  const day = splitPillar(eightChar.getDay());
-  const year = splitPillar(eightChar.getYear());
-  const month = splitPillar(eightChar.getMonth());
-
-  const columns = (input.birthTimeUnknown ? pillars.slice(0, 3) : pillars).map((pillar, index): ChartColumn => {
-    const split = splitPillar(pillar.value);
-    const hidden = pillar.hiddenGan.length > 0 ? pillar.hiddenGan : hiddenStems[split.branch] ?? [];
-
-    return {
-      label: pillar.label,
-      mainStar: pillar.mainStar,
-      heavenlyStem: {
-        value: split.stem,
-        element: stemElements[split.stem] ?? "",
-        emoji: elementEmoji[stemElements[split.stem]] ?? ""
-      },
-      earthlyBranch: {
-        value: split.branch,
-        element: stemElements[hidden[0]] ?? "",
-        emoji: elementEmoji[stemElements[hidden[0]]] ?? ""
-      },
-      hiddenStems: hidden.map((stem, hiddenIndex) => ({
-        stem,
-        element: stemElements[stem] ?? "",
-        tenGod: pillar.hiddenGods[hiddenIndex] ?? ""
-      })),
-      minorStars: pillar.hiddenGods,
-      lifeStage: pillar.lifeStage,
-      selfSeat: pillar.lifeStage,
-      voidBranches: pillar.xunKong,
-      nayin: pillar.nayin,
-      symbolicStars: symbolicStars({
-        dayStem: day.stem,
-        yearStem: year.stem,
-        dayBranch: day.branch,
-        yearBranch: year.branch,
-        monthBranch: month.branch,
-        branch: split.branch,
-        pillar: pillar.value,
-        pillarIndex: index
-      })
-    };
-  });
+    const dayBoundaryMinute = input.dayBoundary === "zi" ? 23 * 60 : 0;
+    const fromDayBoundary = Math.abs(minuteOfDay - dayBoundaryMinute);
+    if (Math.min(fromDayBoundary, 1440 - fromDayBoundary) <= 15) {
+      warnings.push("太阳时靠近换日边界，日柱及十神可能随出生时间误差改变。");
+    }
+  }
+  const uncertainPillars: Record<string, string[]> = {};
+  if (input.birthTimeUnknown) {
+    const candidates = [
+      ...Array.from({ length: 24 }, (_, hour) => `${String(hour).padStart(2, "0")}:00`),
+      "23:59"
+    ];
+    for (const time of candidates) {
+      let sample: ReturnType<typeof buildPillars>;
+      try {
+        sample = buildPillars({ ...input, birthTimeUnknown: false, birthTime: time });
+      } catch {
+        // Historical daylight-saving transitions can skip or repeat a civil clock hour.
+        continue;
+      }
+      for (let index = 0; index < 3; index++) {
+        const label = sample.columns[index].label;
+        const value = sample.columns[index].heavenlyStem.value + sample.columns[index].earthlyBranch.value;
+        const choices = (uncertainPillars[label] ??= []);
+        if (!choices.includes(value)) choices.push(value);
+      }
+    }
+    for (const [label, choices] of Object.entries(uncertainPillars)) {
+      if (choices.length === 1) delete uncertainPillars[label];
+    }
+  }
 
   const counts = countElements(columns);
   const entries = Object.entries(counts);
@@ -497,22 +477,24 @@ export function createBaziChart(input: BaziInput): BaziChart {
       adjustedBirthTime: input.birthTimeUnknown ? undefined : formatTime(date),
       trueSolarOffsetMinutes: solarTime.offsetMinutes,
       calendarProvider: "lunar-typescript",
-      taiYuan: eightChar.getTaiYuan(),
-      taiYuanNaYin: eightChar.getTaiYuanNaYin(),
-      mingGong: input.birthTimeUnknown ? undefined : eightChar.getMingGong(),
-      mingGongNaYin: input.birthTimeUnknown ? undefined : eightChar.getMingGongNaYin(),
-      shenGong: input.birthTimeUnknown ? undefined : eightChar.getShenGong(),
-      shenGongNaYin: input.birthTimeUnknown ? undefined : eightChar.getShenGongNaYin()
+      taiYuan: calendar.getTaiYuan(),
+      taiYuanNaYin: calendar.getTaiYuanNaYin(),
+      mingGong: input.birthTimeUnknown || calendar.getMonth() !== local.getMonth() ? undefined : local.getMingGong(),
+      mingGongNaYin: input.birthTimeUnknown || calendar.getMonth() !== local.getMonth() ? undefined : local.getMingGongNaYin(),
+      shenGong: input.birthTimeUnknown || calendar.getMonth() !== local.getMonth() ? undefined : local.getShenGong(),
+      shenGongNaYin: input.birthTimeUnknown || calendar.getMonth() !== local.getMonth() ? undefined : local.getShenGongNaYin()
     },
-    dayMaster: day.stem,
+    dayMaster: dayStem,
     columns,
     fiveElements: counts,
     summary: {
       strongestElement,
       weakestElement,
       note: input.birthTimeUnknown
-        ? "时辰不详：仅显示按北京时间中午估算的年、月、日三柱；临近换日或节气时，日柱或月柱也可能变化。五行数字仅为已知三柱的干支藏干出现次数，不代表旺衰。"
+        ? `时辰不详：以北京时间中午展示三柱参考盘。${Object.keys(uncertainPillars).length ? "候选柱见下方，日主与五行分布也可能随之变化。" : "当日三柱在所选口径下保持一致。"}五行数字仅为参考盘的干支藏干出现次数，不代表旺衰。`
         : `按出生地经度和当时中国民用时间估算太阳时：${formatDate(date)} ${formatTime(date)}。五行数字仅为干支藏干出现次数，不代表旺衰。`
-    }
+    },
+    uncertainPillars: Object.keys(uncertainPillars).length ? uncertainPillars : undefined,
+    warnings: warnings.length ? warnings : undefined
   };
 }

@@ -247,8 +247,8 @@ function ArchiveCard({ chart, place }: { chart: BaziChart; place: string }) {
           ].map(({ label, value, sub }) => (
             <div key={label}>
               <p className="text-xs text-moss">{label}</p>
-              <p className="mt-0.5 text-sm font-semibold text-ink">{value}</p>
-              <p className="mt-0.5 text-xs leading-4 text-moss/70">{sub}</p>
+              <p className="mt-0.5 text-sm font-semibold text-ink">{value ?? "待核"}</p>
+              <p className="mt-0.5 text-xs leading-4 text-moss/70">{sub ?? ""}</p>
             </div>
           ))}
         </div>
@@ -472,11 +472,30 @@ export default function BaziResultPage() {
         </header>
 
         {/* 时辰不确定提示 */}
+        <p className="mt-4 text-xs text-moss">
+          排盘口径：年、月柱按北京时间交节；日、时柱按出生地太阳时；
+          {chart.input.dayBoundary === "zi" ? "23:00 子初换日" : "00:00 换日"}。
+        </p>
+        {chart.warnings?.length ? (
+          <div className="mt-3 rounded-lg border border-ember/20 bg-ember/10 px-4 py-3 text-sm leading-6 text-ember">
+            {chart.warnings.map((warning) => <p key={warning}>{warning}</p>)}
+          </div>
+        ) : null}
         {chart.input.birthTimeUnknown && (
           <p className="opacity-0 animate-fade-up mt-4 rounded-lg border border-ember/20 bg-ember/10 px-4 py-3 text-sm leading-6 text-ember"
             style={{ animationDelay: "400ms" }}>
-            时辰不详，因此不展示时柱和依赖时辰的宫位。年、月、日柱以中午作暂定，临近节气或换日时也可能不确定。
+            时辰不详，因此不展示时柱和依赖时辰的宫位。年、月、日柱以中午作参考；若下方出现候选柱，请勿把参考盘当作确定命盘。
           </p>
+        )}
+        {chart.uncertainPillars && (
+          <section className="mt-3 rounded-lg border border-ember/20 bg-white/85 p-4 text-sm text-ink">
+            <p className="font-semibold">时辰不详的候选柱</p>
+            <div className="mt-2 flex flex-wrap gap-x-6 gap-y-1 text-moss">
+              {Object.entries(chart.uncertainPillars).map(([label, choices]) => (
+                <span key={label}>{label}：{choices.join(" / ")}</span>
+              ))}
+            </div>
+          </section>
         )}
 
         {/* ── 主内容双栏 ─────────────────────────────────────── */}
