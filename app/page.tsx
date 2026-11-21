@@ -3,13 +3,6 @@ import Image from "next/image";
 import SiteNav from "@/components/SiteNav";
 import HomeProfilePanel from "@/components/HomeProfilePanel";
 
-const featureTags = [
-  "秒出四柱命盘",
-  "五行旺衰速览",
-  "神煞分布可视化",
-  "AI 据盘细解",
-];
-
 const HOW_IT_WORKS = [
   { num: "①", title: "填写生辰", sub: "公历日期 · 出生时辰 · 性别" },
   { num: "②", title: "生成命盘", sub: "四柱 / 紫微十二宫自动推算" },
@@ -53,18 +46,6 @@ export default function Home() {
               </p>
             </div>
 
-            {/* Feature tags — 益处导向，错开出现 */}
-            <div className="mt-5 flex flex-wrap justify-center gap-2">
-              {featureTags.map((tag, i) => (
-                <span
-                  key={tag}
-                  className="opacity-0 animate-fade-up rounded-full border border-[rgba(138,106,53,0.22)] bg-[rgba(255,250,241,0.65)] px-3.5 py-1.5 text-xs font-medium text-moss backdrop-blur-sm"
-                  style={{ animationDelay: `${400 + i * 65}ms` }}
-                >
-                  {tag}
-                </span>
-              ))}
-            </div>
           </div>
 
           {/* ── 回访用户：档案面板（有档案才渲染，在 CTA 上方） ─── */}
