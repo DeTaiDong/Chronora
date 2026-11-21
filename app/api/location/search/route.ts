@@ -39,6 +39,7 @@ export async function GET(request: Request) {
   url.searchParams.set("addressdetails", "1");
   url.searchParams.set("limit", "6");
   url.searchParams.set("accept-language", "zh-CN,en");
+  url.searchParams.set("countrycodes", "cn");
 
   let data: NominatimResult[];
   try {
@@ -55,7 +56,7 @@ export async function GET(request: Request) {
     console.error("[location-search] upstream failed:", error instanceof Error ? error.message : String(error));
     return NextResponse.json({ error: "地点搜索服务暂时不可用，请稍后再试。" }, { status: 502 });
   }
-  const results = data.map((item) => {
+  const results = data.filter((item) => item.address?.country_code?.toUpperCase() === "CN").map((item) => {
     const address = item.address ?? {};
 
     return {

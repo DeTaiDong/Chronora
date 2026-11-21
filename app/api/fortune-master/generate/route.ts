@@ -16,8 +16,8 @@ function isFortuneMasterResponse(value: unknown): value is FortuneMasterResponse
   const item = value as Partial<FortuneMasterResponse>;
   return (
     typeof item.isRefusal === "boolean" &&
-    typeof item.title === "string" &&
-    typeof item.answer === "string" &&
+    typeof item.title === "string" && item.title.trim().length > 0 &&
+    typeof item.answer === "string" && item.answer.trim().length > 0 &&
     Array.isArray(item.focusAreas) && item.focusAreas.every((area) => typeof area === "string") &&
     Array.isArray(item.cautions) && item.cautions.every((caution) => typeof caution === "string")
   );

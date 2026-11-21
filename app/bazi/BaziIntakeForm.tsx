@@ -220,6 +220,10 @@ export default function BaziIntakeForm() {
       setLocationError("请先搜索并选择出生地点。");
       return;
     }
+    if (selectedLocation.countryCode !== "CN") {
+      setLocationError("目前只支持中国大陆出生地点，请重新搜索选择。");
+      return;
+    }
 
     const form = new FormData(event.currentTarget);
     const payload = {
@@ -392,7 +396,7 @@ export default function BaziIntakeForm() {
                         searchLocation();
                       }
                     }}
-                    placeholder="搜索出生城市、区县或英文地址"
+                    placeholder="搜索中国大陆出生城市或区县"
                     className="w-full rounded-md border border-ink/15 bg-white px-3 py-3 text-ink shadow-sm outline-none transition placeholder:text-moss/55 focus:border-jade focus:ring-2 focus:ring-jade/15"
                   />
                   <button

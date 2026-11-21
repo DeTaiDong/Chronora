@@ -1,10 +1,12 @@
 import { Solar } from "lunar-typescript";
+import { Temporal } from "temporal-polyfill";
 
 export type BaziInput = {
   birthDate?: string;
   birthTime?: string;
   birthTimeUnknown?: boolean;
   birthCountry?: string;
+  birthCountryCode?: string;
   birthState?: string;
   birthCity?: string;
   birthLatitude?: string;
@@ -115,43 +117,45 @@ function requireField(value: unknown, message: string) {
 }
 
 function parseDateTime(input: BaziInput) {
-  const [year, month, day] = String(input.birthDate).split("-").map(Number);
-  const [hour, minute] = String(input.birthTime || "12:00").split(":").map(Number);
-
-  if (![year, month, day, hour, minute].every(Number.isFinite)) {
+  const birthDate = input.birthDate ?? "";
+  const birthTime = input.birthTimeUnknown ? "12:00" : input.birthTime ?? "";
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(birthDate) || !/^\d{2}:\d{2}$/.test(birthTime)) {
     throw new Error("出生日期或时间格式不正确。");
   }
-
-  return new Date(year, month - 1, day, hour, minute, 0);
+  try {
+    const local = Temporal.PlainDateTime.from(`${birthDate}T${birthTime}`, { overflow: "reject" });
+    return local.toZonedDateTime("Asia/Shanghai", { disambiguation: "reject" });
+  } catch {
+    throw new Error("出生日期或时间无效，请核对北京时间。");
+  }
 }
 
-function equationOfTimeMinutes(date: Date) {
-  const start = new Date(date.getFullYear(), 0, 0);
-  const dayOfYear = Math.floor((date.getTime() - start.getTime()) / 86_400_000);
+function equationOfTimeMinutes(dayOfYear: number) {
   const b = (2 * Math.PI * (dayOfYear - 81)) / 364;
   return 9.87 * Math.sin(2 * b) - 7.53 * Math.cos(b) - 1.5 * Math.sin(b);
 }
 
-function trueSolarDate(date: Date, longitude?: string) {
+function trueSolarDate(date: Temporal.ZonedDateTime, longitude?: string) {
   const parsedLongitude = Number(longitude);
-
-  if (!Number.isFinite(parsedLongitude)) {
-    return { date, offsetMinutes: 0 };
+  if (!longitude?.trim() || !Number.isFinite(parsedLongitude) || parsedLongitude < 73 || parsedLongitude > 135) {
+    throw new Error("出生地经度无效，请重新选择中国大陆的出生地点。");
   }
 
-  const offsetMinutes = (parsedLongitude - 120) * 4 + equationOfTimeMinutes(date);
+  const solarMinutesFromUtc = parsedLongitude * 4 + equationOfTimeMinutes(date.dayOfYear);
+  const offsetMinutes = solarMinutesFromUtc - date.offsetNanoseconds / 60_000_000_000;
+  const solarInstant = date.epochMilliseconds + Math.round(solarMinutesFromUtc * 60_000);
   return {
-    date: new Date(date.getTime() + offsetMinutes * 60_000),
+    date: new Date(solarInstant),
     offsetMinutes: Math.round(offsetMinutes)
   };
 }
 
 function formatDate(date: Date) {
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+  return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}-${String(date.getUTCDate()).padStart(2, "0")}`;
 }
 
 function formatTime(date: Date) {
-  return `${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
+  return `${String(date.getUTCHours()).padStart(2, "0")}:${String(date.getUTCMinutes()).padStart(2, "0")}`;
 }
 
 function splitPillar(pillar: string) {
@@ -376,16 +380,19 @@ export function createBaziChart(input: BaziInput): BaziChart {
   requireField(input.birthCountry, "请选择出生国家。");
   requireField(input.birthCity, "请选择出生城市。");
   requireField(input.gender, "请选择性别。");
+  if (input.birthCountryCode !== "CN") {
+    throw new Error("目前八字排盘仅支持中国大陆出生地点，请重新选择。");
+  }
 
   const rawDate = parseDateTime(input);
   const solarTime = trueSolarDate(rawDate, input.birthLongitude);
   const date = solarTime.date;
   const solar = Solar.fromYmdHms(
-    date.getFullYear(),
-    date.getMonth() + 1,
-    date.getDate(),
-    date.getHours(),
-    date.getMinutes(),
+    date.getUTCFullYear(),
+    date.getUTCMonth() + 1,
+    date.getUTCDate(),
+    date.getUTCHours(),
+    date.getUTCMinutes(),
     0
   );
   const lunar = solar.getLunar();
@@ -438,7 +445,7 @@ export function createBaziChart(input: BaziInput): BaziChart {
   const year = splitPillar(eightChar.getYear());
   const month = splitPillar(eightChar.getMonth());
 
-  const columns = pillars.map((pillar, index): ChartColumn => {
+  const columns = (input.birthTimeUnknown ? pillars.slice(0, 3) : pillars).map((pillar, index): ChartColumn => {
     const split = splitPillar(pillar.value);
     const hidden = pillar.hiddenGan.length > 0 ? pillar.hiddenGan : hiddenStems[split.branch] ?? [];
 
@@ -486,16 +493,16 @@ export function createBaziChart(input: BaziInput): BaziChart {
   return {
     input: {
       ...input,
-      adjustedBirthDate: formatDate(date),
-      adjustedBirthTime: formatTime(date),
+      adjustedBirthDate: input.birthTimeUnknown ? undefined : formatDate(date),
+      adjustedBirthTime: input.birthTimeUnknown ? undefined : formatTime(date),
       trueSolarOffsetMinutes: solarTime.offsetMinutes,
       calendarProvider: "lunar-typescript",
       taiYuan: eightChar.getTaiYuan(),
       taiYuanNaYin: eightChar.getTaiYuanNaYin(),
-      mingGong: eightChar.getMingGong(),
-      mingGongNaYin: eightChar.getMingGongNaYin(),
-      shenGong: eightChar.getShenGong(),
-      shenGongNaYin: eightChar.getShenGongNaYin()
+      mingGong: input.birthTimeUnknown ? undefined : eightChar.getMingGong(),
+      mingGongNaYin: input.birthTimeUnknown ? undefined : eightChar.getMingGongNaYin(),
+      shenGong: input.birthTimeUnknown ? undefined : eightChar.getShenGong(),
+      shenGongNaYin: input.birthTimeUnknown ? undefined : eightChar.getShenGongNaYin()
     },
     dayMaster: day.stem,
     columns,
@@ -503,7 +510,9 @@ export function createBaziChart(input: BaziInput): BaziChart {
     summary: {
       strongestElement,
       weakestElement,
-      note: `已接入 lunar-typescript 历法库，并按出生地经度修正真太阳时，修正后时间约为 ${formatDate(date)} ${formatTime(date)}。`
+      note: input.birthTimeUnknown
+        ? "时辰不详：仅显示按北京时间中午估算的年、月、日三柱；临近换日或节气时，日柱或月柱也可能变化。五行数字仅为已知三柱的干支藏干出现次数，不代表旺衰。"
+        : `按出生地经度和当时中国民用时间估算太阳时：${formatDate(date)} ${formatTime(date)}。五行数字仅为干支藏干出现次数，不代表旺衰。`
     }
   };
 }

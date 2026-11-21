@@ -192,9 +192,9 @@ function FiveElementsCard({
         ))}
       </div>
       <p className="mt-4 text-xs leading-5 text-moss">
-        最显：<span className={`font-semibold ${elementColors[strongestElement]}`}>{strongestElement}</span>
+        出现最多：<span className={`font-semibold ${elementColors[strongestElement]}`}>{strongestElement}</span>
         {" · "}
-        较弱：<span className={`font-semibold ${elementColors[weakestElement]}`}>{weakestElement}</span>
+        出现最少：<span className={`font-semibold ${elementColors[weakestElement]}`}>{weakestElement}</span>
       </p>
     </div>
   );
@@ -235,9 +235,9 @@ function ArchiveCard({ chart, place }: { chart: BaziChart; place: string }) {
         <div className="border-t border-ink/10 pt-3.5">
           <dt className="text-xs text-moss">真太阳时</dt>
           <dd className="mt-0.5 text-sm font-medium text-ink">
-            {chart.input.adjustedBirthDate} {chart.input.adjustedBirthTime}
+            {chart.input.birthTimeUnknown ? "时辰不详，无法确定" : `${chart.input.adjustedBirthDate} ${chart.input.adjustedBirthTime}`}
           </dd>
-          <dd className="mt-0.5 text-xs text-moss">修正 {chart.input.trueSolarOffsetMinutes ?? 0} 分钟</dd>
+          {!chart.input.birthTimeUnknown && <dd className="mt-0.5 text-xs text-moss">修正 {chart.input.trueSolarOffsetMinutes ?? 0} 分钟</dd>}
         </div>
         <div className="grid grid-cols-3 gap-3 border-t border-ink/10 pt-3.5">
           {[
@@ -437,13 +437,13 @@ export default function BaziResultPage() {
                       className={`opacity-0 animate-fade-up rounded-full border border-white/15 px-2.5 py-1 text-xs font-semibold ${elementColorsDark[chart.summary.strongestElement]}`}
                       style={{ animationDelay: "220ms" }}
                     >
-                      最显 · {chart.summary.strongestElement}
+                      最多 · {chart.summary.strongestElement}
                     </span>
                     <span
                       className="opacity-0 animate-fade-up rounded-full border border-white/15 px-2.5 py-1 text-xs text-white/45"
                       style={{ animationDelay: "290ms" }}
                     >
-                      较弱 · {chart.summary.weakestElement}
+                      最少 · {chart.summary.weakestElement}
                     </span>
                   </div>
                 </div>
@@ -475,7 +475,7 @@ export default function BaziResultPage() {
         {chart.input.birthTimeUnknown && (
           <p className="opacity-0 animate-fade-up mt-4 rounded-lg border border-ember/20 bg-ember/10 px-4 py-3 text-sm leading-6 text-ember"
             style={{ animationDelay: "400ms" }}>
-            你选择了"时辰不确定"，时柱、部分神煞与宫位信息会带有参考性偏差，后续解读建议重点看年、月、日柱。
+            时辰不详，因此不展示时柱和依赖时辰的宫位。年、月、日柱以中午作暂定，临近节气或换日时也可能不确定。
           </p>
         )}
 

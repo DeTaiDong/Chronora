@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { BaziChart, BaziInput } from "@/app/bazi/chartEngine";
 import type { FortuneMasterResponse } from "@/lib/fortune-master";
 import { hasSecondaryInfo } from "@/lib/fortune-master";
@@ -22,22 +22,6 @@ type FortuneMasterApiErrorResponse = {
   error?: FortuneMasterApiError | string;
 };
 
-function useReveal(threshold = 0.1) {
-  const ref = useRef<HTMLDivElement>(null);
-  const [visible, setVisible] = useState(false);
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const io = new IntersectionObserver(
-      ([e]) => { if (e.isIntersecting) { setVisible(true); io.disconnect(); } },
-      { threshold },
-    );
-    io.observe(el);
-    return () => io.disconnect();
-  }, [threshold]);
-  return [ref, visible] as const;
-}
-
 function getApiErrorMessage(payload: FortuneMasterApiErrorResponse | null, fallback: string) {
   if (!payload?.error) return fallback;
   if (typeof payload.error === "string") return payload.error;
@@ -47,6 +31,14 @@ function getApiErrorMessage(payload: FortuneMasterApiErrorResponse | null, fallb
 function getApiErrorDetail(payload: FortuneMasterApiErrorResponse | null) {
   if (!payload?.error || typeof payload.error === "string") return undefined;
   return payload.error.detail || payload.error.code;
+}
+
+function hasReadingAnswer(value: unknown): value is FortuneMasterResponse {
+  if (!value || typeof value !== "object") return false;
+  const reading = value as Partial<FortuneMasterResponse>;
+  return typeof reading.title === "string" && reading.title.trim().length > 0 &&
+    typeof reading.answer === "string" && reading.answer.trim().length > 0 &&
+    Array.isArray(reading.focusAreas) && Array.isArray(reading.cautions);
 }
 
 function genderLabel(value?: string) {
@@ -86,7 +78,7 @@ function ReadingBox({ reading }: { reading: FortuneMasterResponse | null }) {
         <h2 className="mt-1 text-2xl font-semibold text-ink">{reading.title}</h2>
       </div>
 
-      <div className="min-h-[360px] space-y-5 px-5 py-5 sm:px-6">
+      <div className="space-y-5 px-5 py-5 sm:px-6">
         {reading.answer
           .split(/\n\n+/)
           .filter(Boolean)
@@ -150,8 +142,6 @@ export default function BaziMasterPage() {
   const [apiError, setApiError] = useState<string | null>(null);
   const [apiErrorDetail, setApiErrorDetail] = useState<string | null>(null);
 
-  const [infoRef, infoVisible] = useReveal();
-
   useEffect(() => {
     const raw = sessionStorage.getItem("bazi:chart");
 
@@ -174,8 +164,11 @@ export default function BaziMasterPage() {
 
     if (cachedFp === fp && cachedReading) {
       try {
-        setReading(JSON.parse(cachedReading));
-        return;
+        const cached = JSON.parse(cachedReading) as unknown;
+        if (hasReadingAnswer(cached)) {
+          setReading(cached);
+          return;
+        }
       } catch {
         // cache corrupt, fall through
       }
@@ -203,7 +196,11 @@ export default function BaziMasterPage() {
           return null;
         }
 
-        return data as FortuneMasterResponse | null;
+        if (data !== null && !hasReadingAnswer(data)) {
+          setApiError("AI 返回的解读正文为空，请刷新页面重新生成。");
+          return null;
+        }
+        return data;
       })
       .then((data) => {
         if (!data) return;
@@ -294,17 +291,10 @@ export default function BaziMasterPage() {
           </div>
         </header>
 
-        {/* 问诊资料 — scroll-triggered stagger */}
-        <div ref={infoRef}>
+        {/* 问诊资料 */}
+        <div>
           <section className="mt-5 rounded-lg border border-ink/10 bg-white/80 p-5 shadow-sm sm:p-6">
-            <div
-              className="mb-4 flex items-end justify-between gap-3"
-              style={{
-                opacity: infoVisible ? 1 : 0,
-                transform: infoVisible ? "none" : "translateY(8px)",
-                transition: "opacity 0.5s ease, transform 0.5s ease",
-              }}
-            >
+            <div className="mb-4 flex items-end justify-between gap-3">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-widest text-ember">问诊资料</p>
                 <h2 className="mt-1 text-xl font-semibold text-ink">用户留下的辅助信息</h2>
@@ -312,15 +302,10 @@ export default function BaziMasterPage() {
             </div>
 
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {secondaryInfo.map((item, i) => (
+              {secondaryInfo.map((item) => (
                 <div
                   key={item.label}
                   className="rounded-md border border-ink/10 bg-paper/45 p-4"
-                  style={{
-                    opacity: infoVisible ? 1 : 0,
-                    transform: infoVisible ? "none" : "translateY(12px)",
-                    transition: `opacity 0.5s cubic-bezier(0.22,1,0.36,1) ${i * 60 + 60}ms, transform 0.5s cubic-bezier(0.22,1,0.36,1) ${i * 60 + 60}ms`,
-                  }}
                 >
                   <p className="text-xs text-moss">{item.label}</p>
                   <p className="mt-2 text-sm font-medium leading-6 text-ink">{item.value}</p>
